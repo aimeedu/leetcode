@@ -561,7 +561,6 @@ class Solution {
 }
 
 // 279. Perfect Squares similar to 322. Coin Change
-
 class Solution {
     public int numSquares(int n) {
         // [1, 2, 3, 4, 5, 6, 7, ...]^2
@@ -607,4 +606,235 @@ class Solution {
         }
         return dp[n];
     }
+}
+
+// 01/22/2020
+// 134. Gas Station. Time: O(n) / Space: O(1)
+class Solution {
+    public int canCompleteCircuit(int[] gas, int[] cost) {
+        int total = 0;
+        int cur = 0;
+        int start = 0;
+        for (int i = 0;i<gas.length; i++) {
+            cur = cur + gas[i] - cost[i];
+            System.out.println("cur: "+cur+"=" +gas[i] +"-"+ cost[i]);
+
+            if(cur < 0){
+
+                System.out.println("start: "+ start +" i " +i);
+                start = i + 1;
+                // must be i+1, not start + 1,
+                // if 1st station is (+ gas) but 2nd station become (- gas), start will not update at prev station.
+                cur = 0;
+            }
+            // calculate the total for all the stop, no matter which stop goes first, the total is unchanged.
+            total = total +gas[i]-cost[i];
+            System.out.println("total: "+total);
+        }
+        return total >= 0? start : -1;
+    }
+}
+
+// 122. Best Time to Buy and Sell Stock II
+// buy and sale can be the same day. need to sale first.
+class Solution {
+    public int maxProfit(int[] prices) {
+        // corner case, null or 0 length
+        if(prices.length == 0){
+            return 0;
+        }
+        int max = 0;
+        for (int i = 1; i < prices.length; i++){
+            if(prices[i] > prices[i-1]){
+                max += prices[i] - prices[i-1];
+            }
+        }
+        return max;
+    }
+}
+
+// 01/23/2020
+// 714. Best Time to Buy and Sell Stock with Transaction Fee
+// Time O(n) / Space O(1)
+class Solution {
+    public int maxProfit(int[] prices, int fee) {
+        int sellforcash = 0, buyorhold = -prices[0];
+        // if u have a stoke in your account, all buying, mins from the total from prev day.
+        for(int i = 1; i < prices.length; i++){
+            sellforcash = Math.max(sellforcash, buyorhold + prices[i] - fee);
+            buyorhold = Math.max(buyorhold, sellforcash - prices[i]);
+        }
+        return sellforcash;
+    }
+}
+
+// 309. Best Time to Buy and Sell Stock with Cooldown
+class Solution { // hint: A 3 states NFA will help this question.
+    public int maxProfit(int[] prices) {
+
+        if(prices.length == 0) return 0;
+
+        // sold -> currrent cash amount
+        int holdorbuy = -prices[0], sold = 0, rest = 0;
+        for (int i = 0; i < prices.length; i++) {
+            // use the hold price from previous day[i-1] + prices[i] = profit after sold.
+            int prve_sold_price = sold;
+
+            sold = holdorbuy + prices[i];
+
+            holdorbuy = Math.max(holdorbuy, rest-prices[i]);
+
+            rest = Math.max(prve_sold_price, rest);
+        }
+        return Math.max(sold, rest);
+    }
+}
+
+// 300. Longest Increasing Subsequence
+// Time complexity : O(n^2) Two loops of n
+// Space complexity : O(n). dp array of size n is used.
+class Solution {
+    public int lengthOfLIS(int[] nums) {
+
+        if (nums.length == 0) return 0;
+        if (nums.length == 1) return 1;
+
+        int [] dp = new int[nums.length];
+        dp[0]=1;
+        int ans = 1;
+        for(int i=1; i<nums.length; i++){
+            int max = 0;
+            for(int j = 0; j < i; j++){
+                if (nums[j]<nums[i]) {
+                    // System.out.println("i = "+ i + " " +nums[j] + " < "+ nums[i] + " "+" max: " +max+" dp["+j+"]:"+dp[j]);
+                    max = Math.max(max,dp[j]); // critical point
+                    // System.out.println("max : "+max);
+                }
+            }// end inner for
+            dp[i] = max +1;
+            ans = Math.max(ans, dp[i]); // ans is the max in dp array.
+        }
+        return ans;
+    }
+}
+
+// 01/27/2020
+// 33. Search in Rotated Sorted Array 
+// Time: O(log(n)); Space O(1)
+class Solution {
+    public int search(int[] nums, int target) {
+        if (nums == null || nums.length == 0) return -1;
+        
+        int left = 0;
+        int right = nums.length-1;
+        
+        while(left <= right) {
+            int mid = left + (right - left) / 2;
+            // case 1: if n[mid] is the target.
+            if (target == nums[mid]) {
+                return mid;
+            } 
+            // case 2: [7 0 1 (2) 4 5 6] right half is sorted
+            // check sorted half first
+            else if (nums[mid] < nums[left]) {
+                if (target > nums[mid] && target <= nums[right]){
+                    left = mid + 1;
+                }else{
+                    right = mid - 1; 
+                }
+            } 
+            // case 3: [4 5 6 (7) 8 1 2] right halfl is sorted
+            // check sorted half first
+            else {
+                if (target >= nums[left] && target < nums[mid]){
+                    right = mid -1;
+                }else{
+                    left = mid +1;
+                }
+            }   
+        }
+        return -1;
+    }
+}
+
+// 01/28/2020
+// 81. Search in Rotated Sorted Array II
+// Time: O(log n); Space O(1)
+class Solution {
+    public boolean search(int[] nums, int target) {
+        // corner case
+        if (nums == null || nums.length == 0) return false;
+        
+        int left = 0;
+        int right = nums.length - 1;
+        
+        while(left <= right) {
+            int mid = left+(right- left)/2;
+            // case 1
+            if(nums[mid] == target){
+                return true;
+            }   
+            // added case 4
+            // since nums[mid] is not the target, so nums[left] is not target either, 
+            // we can skip nums[left] by moving the left pointer 1 step to the right.
+            else if (nums[mid] == nums[left]){
+                left = left +1;
+            }
+            // case 2 from #33
+            else if(nums[mid] < nums[left]) {
+                if (target > nums[mid] && target <= nums[right]){
+                    left = mid+1;
+                }
+                else {
+                    right = mid-1;
+                }
+            }
+            // case 3  from #33
+            else {
+                if (target >= nums[left] && target < nums[mid]){
+                    right = mid-1;
+                }else{
+                    left = mid+1;
+                }
+            }
+        }
+        return false;
+    }
+}
+
+// 153. Find Minimum in Rotated Sorted Array
+// Time: O(log n); Space O(1)
+class Solution {
+    public int findMin(int[] nums) {
+        if(nums == null || nums.length == 0) return -1;
+        if(nums.length == 1) return nums[0];
+        int left = 0, right = nums.length-1;
+        
+        // csae 1: the array is sorted.
+        if (nums[right] > nums[0]) {
+            return nums[0];
+        }
+        
+        while(right >= left) {
+            int mid = left + (right - left) / 2;
+            
+            // [6 (7) 1] , min is one left to the mid.
+            if (nums[mid] > nums[mid+1]) {
+                return nums[mid+1];
+            }
+         
+            // [7 (1) 2] , min is at mid.
+            if (nums[mid-1] > nums[mid]){
+                return nums[mid];
+            }
+            // [4 5 6 (7) 8 1 2]
+            if (nums[mid] > nums[left]){
+                left = mid + 1;
+            } // [7 0 1 (2) 4 5 6]
+            else { 
+                right = mid -1;
+            }       
+        }       
+        return -1;       
+    }   
 }
