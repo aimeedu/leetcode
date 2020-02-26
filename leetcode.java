@@ -1611,7 +1611,6 @@ class Solution { // Time O(n) / Space O(1)
                 max = Math.max(max, nums[i]); // 10
             }
         }
-        
         int l,r;  
         // min is 4, so when you find a num is > 4, you find the start of the unsorted array.
         for(l=0; l<nums.length; l++) {
