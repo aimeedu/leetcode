@@ -1623,3 +1623,64 @@ class Solution { // Time O(n) / Space O(1)
         return r-l>0 ? r-l+1: 0; 
     }
 }
+
+// 48. Rotate Image O(n^2)? / O(1)
+class Solution {
+    public void rotate(int[][] matrix) {
+        int N = matrix.length;
+        
+        for (int i = 0; i<N; i++) {     
+            for (int j = i; j<N; j++) {
+                int t = matrix[i][j];
+                matrix[i][j] = matrix[j][i];
+                matrix[j][i] = t;
+            }
+        }
+        
+        for (int i = 0; i<N; i++) {
+            for (int j = 0; j<(N/2); j++) {
+                int t = matrix[i][j];
+                matrix[i][j] = matrix[i][N-1-j];
+                matrix[i][N-1-j] = t;
+            }
+        }
+    }
+}
+
+// 11. Container With Most Water    Time: O(n) / Space: O(1)
+class Solution {  // moving two pointers towards the mid 
+    public int maxArea(int[] height) {
+        int max = Integer.MIN_VALUE;
+        int left = 0;
+        int right = height.length-1;
+        while(left < right) {
+            int area = Math.min(height[left], height[right]) * (right-left); 
+            max = Math.max(max, area);
+            if (height[left] < height[right]) left++;
+            else right--;
+        }
+        return max;
+    }
+}
+
+
+// 739. Daily Temperatures  Time: O(n) / Space O(w)
+// The size of the stack is bounded as it represents strictly increasing temperatures.
+class Solution {
+    public int[] dailyTemperatures(int[] T) {
+        int [] ans = new int [T.length];
+        Stack<Integer> stack = new Stack<>();
+        for (int i = T.length-1; i >= 0; i--) {
+            while(!stack.isEmpty() && T[i] >= T[stack.peek()]) {
+                // we take out the colder temp from stack, until meet a wammer temp. 
+                // The wammer temp we just found is still on the stack.
+                stack.pop();
+            }
+            // if temp on top of the stack is warmer, we have a ans at current position i
+            // if no wammer day and the stack is empty, return 0 to the position i.
+            ans[i] = stack.isEmpty() ? 0 : stack.peek() - i;         
+            stack.push(i); 
+            }
+            return ans;
+        }
+}
