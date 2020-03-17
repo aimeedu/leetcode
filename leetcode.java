@@ -1684,3 +1684,161 @@ class Solution {
             return ans;
         }
 }
+
+// 287. Find the Duplicate Number  Time complexity : O(n)/ Space complexity : O(1)
+class Solution {
+    public int findDuplicate(int[] nums) {
+        int slow = nums[0], fast = nums[0];
+        do {// do it at least once, cause initially slow == fast;
+            // we need to use nums[index] as next step cause we need to 
+            //loop through the array more than 1 time. 
+            //it's not a linkedlist, so we can not use i++ and j = j+2 to take steps; 
+            
+            // slow pt takes 1 step;
+            slow = nums[slow];
+            // fast pt takes 2 steps;
+            fast = nums[nums[fast]];
+            // System.out.println(" slow " + slow + ", fast " + fast);
+        } while(slow != fast) ;
+        // when the loop break, the meeting point may not be the duplicated number, 
+        // it only shows the cycle has been detected. 
+
+        // 2 pointers take the same steps , break when find duplicated.
+        int p1 = nums[0];
+        int p2 = slow; // slow pointer is in the cycle.
+        
+        while (p1!= p2) {
+            p1 = nums[p1];
+            p2 = nums[p2];
+        }
+        return p1;       
+    }
+}
+
+
+// 437. Path Sum III
+// Time Complexity: O(n)
+// Space Complexity: O(log n) if balanced tree. O(n) otherwise.  ?
+class Solution {
+    public int pathSum(TreeNode root, int sum) {
+        // the main function returns the count;
+        if (root == null) return 0;
+        // count form root + count return from left + count return from right.
+        // starting point can be any node. so we need to count the case for left and right.
+        return dfs(root, sum) + pathSum(root.left, sum) + pathSum(root.right, sum);
+    }
+    // the helper function returns the rest value
+    private int dfs(TreeNode root, int sum){
+        if (root == null) return 0;
+        sum -= root.val;
+        // recursive cal
+        // if sum == 0, we found a solution, else return 0 solution
+        return (sum == 0 ? 1 : 0) + dfs(root.left, sum) + dfs(root.right, sum);
+    }
+}
+
+// 96. Unique Binary Search Trees
+class Solution {  // Time O(n^2) / Space O(n)?
+    public int numTrees(int n) {
+        // refer back to Catalan Numbers
+        // construct a dp array
+        int[] dp = new int[n+1];
+        //set an initial value for dp[0]
+        dp[0] = 1;
+        // 1 node can make 1 tree.
+        dp[1] = 1;       
+        for (int i = 2; i<=n; i++) { // outter loop represents the node at root.
+            for (int j =1; j<=i; j++) { 
+                // how many ways for certain number of the nodes for left and right sub tree.
+                // dp[j-1] --> left
+                // dp[i-j] --> right
+                dp[i] += dp[j-1] * dp[i-j]; 
+            }
+        }
+        return dp[n];
+    }
+}
+
+// 78. Subsets   Time: n * 2^n/ Space: O(N)
+class Solution {
+    public List<List<Integer>> subsets(int[] nums) {
+        List<List<Integer>> ans = new ArrayList<>(); // initialize an empty ans array
+        if (nums.length == 0 || nums == null) {
+            return ans;
+        }
+        // recusive function parameters: nums array, ans array, current_subset array, index of the current subset
+        helper(nums, ans, new ArrayList<>(), 0);
+        return ans;
+     }    
+        private void helper(int[] nums, List<List<Integer>> ans, List<Integer> c_subset, int index) {
+            // add the current subset to ans array. 
+            // use "new ArrayList<>(c_subset)" to make a deep copy, problem will rise if you use "c_subset"
+            // because c_subset is a variable, we will modify c_subset.
+            ans.add(new ArrayList<>(c_subset));
+            for (int i = index; i < nums.length; i++) {
+                c_subset.add(nums[i]);
+                // recursive add one more element to the end / DFS
+                helper(nums, ans, c_subset, i+1);
+                c_subset.remove(c_subset.size()-1);
+            }
+        }
+}
+
+// 90. Subsets II
+class Solution {
+    public List<List<Integer>> subsetsWithDup(int[] nums) {
+        List<List<Integer>> ans = new ArrayList<>(); // initialize an empty ans array
+        if (nums.length == 0 || nums == null) {
+            return ans;
+        }
+        Arrays.sort(nums);
+        // recusive function parameters: nums array, ans array, current_subset array, index of the current subset
+        helper(nums, ans, new ArrayList<>(), 0);
+        return ans;
+     }    
+        private void helper(int[] nums, List<List<Integer>> ans, List<Integer> c_subset, int index) {
+            // add the current subset to ans array. 
+            // use "new ArrayList<>(c_subset)" to make a deep copy, problem will rise if you use "c_subset"
+            // because c_subset is a variable, we will modify c_subset. (point to the reference)
+            ans.add(new ArrayList<>(c_subset));
+            for (int i = index; i < nums.length; i++) {
+                
+                if(i!= index && nums[i] == nums[i-1]) continue; // continue to next iteration of the loop
+      
+                c_subset.add(nums[i]);
+
+                // recursive add one more element to the end / DFS
+                helper(nums, ans, c_subset, i+1);
+                c_subset.remove(c_subset.size()-1);
+            }
+        }
+}
+
+// 200. Number of Islands
+class Solution {
+    public int numIslands(char[][] grid) {
+        if(grid == null || grid.length == 0) return 0;
+        int m = grid.length;
+        int n = grid[0].length;
+        
+        int ans = 0;
+        
+        for (int y=0; y<m; y++){ // check vertical
+            for (int x=0; x<n; x++){ // check horizontal          
+                if(grid[y][x] == '1') { // if find an island, ans +1
+                    ans++;
+                    dfs(grid, x, y, n, m);
+                }        
+            }
+        }
+        return ans;
+    }
+    private void dfs(char[][] grid, int x, int y, int n, int m) {
+        if (x<0 || y<0 || x>=n || y>=m || grid[y][x] == '0') return; // out of the bound and it's not island 
+        grid[y][x] = '0';   // mark every island as seen by turning all 1 to 0;
+        dfs(grid, x+1, y, n, m);  // check up, below, left right
+        dfs(grid, x-1, y, n, m);
+        dfs(grid, x, y+1, n, m);
+        dfs(grid, x, y-1, n, m);
+    }
+}
