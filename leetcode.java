@@ -138,35 +138,84 @@ class Solution {
 
 // 102. Binary Tree Level Order Traversal
 
+// Time: O(n); Space O(n)
+// Skewed tree
+
 /**
- * Definition for a binary tree node. public class TreeNode { int val; TreeNode
- * left; TreeNode right; TreeNode(int x) { val = x; } }
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
  */
-class Solution {
+class Solution {  // BFS
     public List<List<Integer>> levelOrder(TreeNode root) {
-        Queue<TreeNode> q = new LinkedList<>();
         List<List<Integer>> ans = new ArrayList<>();
-        if (root == null) {
-            return ans;
-        }
-        q.add(root);
-        while (!q.isEmpty()) {
-            List<Integer> t = new ArrayList<>();
-            // q.add(root);
-            int size = q.size();
-            for (int i = 0; i < size; i++) {
-                TreeNode c = q.remove();
-                t.add(c.val);
-                if (c.left != null)
-                    q.add(c.left);
-                if (c.right != null)
-                    q.add(c.right);
+        if (root == null) return ans;
+        
+        Queue<TreeNode> queue = new LinkedList<>();
+        // init state, only add root
+        queue.offer(root);
+        
+        while(!queue.isEmpty()){
+            // build integer array for each level of the tree.
+            List<Integer> level = new ArrayList<>();
+            // get current level queue size
+            int size = queue.size();      
+            // build inner array.
+            for(int i = 0; i<size; i++) {
+                // get the current node in the queue
+                TreeNode n = queue.poll();
+                // add it to the inner array
+                level.add(n.val);
+                if(n.left != null) queue.offer(n.left);
+                if(n.right != null) queue.offer(n.right);
             }
-            ans.add(t);
+            ans.add(level);
         }
         return ans;
     }
 }
+
+
+
+// /**
+//  * Definition for a binary tree node. public class TreeNode { int val; TreeNode
+//  * left; TreeNode right; TreeNode(int x) { val = x; } }
+//  */
+// class Solution {
+//     public List<List<Integer>> levelOrder(TreeNode root) {
+//         Queue<TreeNode> q = new LinkedList<>();
+//         List<List<Integer>> ans = new ArrayList<>();
+//         if (root == null) {
+//             return ans;
+//         }
+//         q.add(root);
+//         while (!q.isEmpty()) {
+//             List<Integer> t = new ArrayList<>();
+//             // q.add(root);
+//             int size = q.size();
+//             for (int i = 0; i < size; i++) {
+//                 TreeNode c = q.remove();
+//                 t.add(c.val);
+//                 if (c.left != null)
+//                     q.add(c.left);
+//                 if (c.right != null)
+//                     q.add(c.right);
+//             }
+//             ans.add(t);
+//         }
+//         return ans;
+//     }
+// }
 
 // 846. Hand of Straights
 class Solution {
@@ -1814,6 +1863,43 @@ class Solution {
         }
 }
 
+
+
+// 39. Combination Sum
+class Solution {
+    public List<List<Integer>> combinationSum(int[] candidates, int target) {
+        List<List<Integer>> ans = new ArrayList<List<Integer>>();
+        if(candidates == null || candidates.length == 0) return ans;
+        Arrays.sort(candidates);
+        // call recursive function to dfs search.
+        dfs(candidates, target, 0, new ArrayList<>(), ans);
+        return ans;
+    }
+    
+    private void dfs(int[] nums, int target, int index, List<Integer> current, List<List<Integer>> ans) {
+        if(target == 0) {
+            ans.add(new ArrayList<>(current));
+        }
+        else if(target>0){
+            for (int i = index; i < nums.length; i++){
+                if (nums[i] > target) break;
+                current.add(nums[i]);
+                dfs(nums, target-nums[i], i, current, ans);
+                current.remove(current.size()-1);
+            }
+        }
+    }   
+}
+
+
+
+
+
+
+
+
+
+
 // 200. Number of Islands
 class Solution {
     public int numIslands(char[][] grid) {
@@ -1842,3 +1928,644 @@ class Solution {
         dfs(grid, x, y-1, n, m);
     }
 }
+
+// 494. Target Sum   Time: O(2^n) / Space: O(n)
+class Solution { // dfs no memo, not efficient
+    public int findTargetSumWays(int[] nums, int S) {
+        if(nums == null || nums.length == 0) return 0;
+        return dfs(nums, S, 0);
+    }
+    
+    private int dfs(int[] nums, int S, int index) {
+        //return 1(find an ans) or 0(does not add up to S)s
+        if(index == nums.length){
+            return (S==0) ? 1 : 0;
+        }
+            
+        return dfs(nums, S-nums[index], index+1)
+            +dfs(nums, S+nums[index], index+1);
+    }
+}
+// Notice the given condition: The sum of elements in the given array will not exceed 1000.
+// means dp[x] < 1000
+// Consider dynamic programming 
+// come back later
+
+
+
+
+// 114. Flatten Binary Tree to Linked List (in-place)
+// Time: O(n)? walk through all n nodes / Space: O(1)
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+class Solution {
+    public void flatten(TreeNode root) {
+        if (root == null) return;
+        flatten(root.left);
+        flatten(root.right);
+        
+        // nothing to do
+        if(root.left == null) return;
+        
+        // root.left.left is null and return,
+        // we want to find the right most leaf of root.left
+        TreeNode n = root.left;
+        while (n.right != null) {
+            n = n.right;
+        }
+        // append right subtree from the root to the right most leaf's right side.
+        n.right = root.right;
+        // move the left subtree to right side of the root
+        root.right = root.left;
+        // left subtree set to nothing.
+        root.left = null;
+    }
+}
+
+// 42. Trapping Rain Water  Time: O(n) / Space: O(1)
+class Solution {
+    public int trap(int[] height) {
+        // collection the result from each index.
+        int max = 0;
+        // keep update left, right wall max height
+        int leftmax = 0; 
+        int rightmax = 0;
+        // set 2 pointers from left and right.
+        int l = 0;
+        int r = height.length-1;
+        while(l<r){         
+            // update max wall height after moving the pointer
+            leftmax = Math.max(leftmax, height[l]);
+            rightmax = Math.max(rightmax, height[r]);
+            
+            if(leftmax<rightmax){
+                max += Math.min(leftmax,rightmax)-height[l];
+                l++;
+            }else{
+                max += Math.min(leftmax,rightmax)-height[r];
+                r--;
+            }
+        }
+        return max;
+    }
+}
+
+
+// 75. Sort Colors    Time: O(n) / Space: O(1)
+// 2 pass, not efficient 
+class Solution {
+    public void sortColors(int[] nums) {
+        if(nums.length<2 || nums == null) return;
+        int c0=0;
+        int c1=0;
+        int c2=0;
+        for (int n: nums){
+            if(n == 0) c0++;
+            else if(n==1) c1++;
+            else c2++;
+        }
+        System.out.println(c1);
+        
+        for (int i=0; i< nums.length;i++){
+            if (c0 != 0){
+                nums[i] = 0;
+                c0--;
+            } 
+            else if (c1 != 0){
+                nums[i] = 1;
+                c1--;
+            } 
+            else{
+                nums[i] = 2;
+                c2--;
+            } 
+        }
+        return;
+    }
+}
+
+// 1 pass
+class Solution {
+    public void sortColors(int[] nums) {
+        if(nums.length<2 || nums == null) return;
+        
+        int start = 0;
+        int end = nums.length-1;
+        int cur = 0;
+        
+        while(cur <= end){
+            // always switch 0 with nums[start]
+            if(nums[cur] == 0){
+                nums[cur]=nums[start];
+                nums[start]=0;
+                start++;
+                cur++;
+            }
+            // always switch 2 with nums[end]
+            else if(nums[cur] == 2){
+                nums[cur]=nums[end];
+                nums[end]=2;
+                end--;
+            }
+            else{ // if nums[cur]==1
+                cur++;
+            }
+        }
+    }
+}
+
+// 64. Minimum Path Sum     Time: O(n)? / Space: O(n)? the input array is 2D
+// Time complexity O(N) where N is mxn because we are traversing the whole matrix
+// Space Complexity is O(N) where N is mxn because we created another grid to store the values we are computing.
+
+class Solution {
+    public int minPathSum(int[][] grid) {
+        int m = grid.length;
+        int n = grid[0].length;
+        // define the state
+        int[][] dp = new int [m][n];
+        // initialize the upper most row and left most column.
+        dp[0][0] = grid[0][0];
+        // 1st row
+        for(int j = 1; j < n; j++) {
+            dp[0][j] = dp[0][j-1] + grid[0][j];
+        }
+        // 1st column
+        for(int i = 1; i < m; i++) {
+            dp[i][0] = dp[i-1][0] + grid[i][0];
+        }
+        // transition function. 
+        for (int i = 1; i<m; i++) {
+            for (int j = 1; j<n; j++) {
+                dp[i][j] = Math.min(dp[i-1][j], dp[i][j-1]) + grid[i][j];
+            }
+        }
+        // return value
+        return dp[m-1][n-1];
+    }
+}
+
+
+// 560. Subarray Sum Equals K     Time: O(n^2) / Space: O(1)
+class Solution {
+    public int subarraySum(int[] nums, int k) {
+        int count = 0;
+
+        for (int left=0; left<nums.length; left++) {
+            int sum = 0;
+            for (int right = left; right < nums.length; right++) {
+                sum += nums[right];
+                if (sum == k) count++;
+            }
+        }
+        
+        return count;
+    }
+}
+
+// 19. Remove Nth Node From End of List  Time: O(L) / Space: O(1) 
+// The algorithm makes one traversal of the list of L nodes. Therefore time complexity is O(L) ?
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution {
+    public ListNode removeNthFromEnd(ListNode head, int n) {
+        ListNode dum = new ListNode(0, head);
+        ListNode slow = dum;
+        ListNode fast = dum;
+        
+        // move the fast pointer to place.
+        for (int i=0; i < n; i++){
+            fast = fast.next;
+        }
+        // fast slow move in the same time
+        while (fast.next != null){
+            fast = fast.next;
+            slow = slow.next;
+        }
+        
+        // must point to slow.next.next
+        // point to fast will bring error for the corner case when 2 ptrs do not need to move
+        slow.next = slow.next.next;
+        
+        // must return from dum.next, dum node must be excluded.
+        return dum.next;
+    }
+}
+
+// 91. Decode Ways   / Time: O(n) / Space: O(n) 
+// 1
+class Solution {
+    public int numDecodings(String s) {
+        int[] dp = new int[s.length()+1];
+        dp[0] = 1;
+        dp[1] = s.charAt(0) == '0' ? 0 : 1; // if the first char is 0, 0 way to decode, else 1 way to decode.
+        
+        for (int i = 2; i<= s.length(); i++){
+            int oneDigits = s.charAt(i-1) - '0';
+            int twoDigits = Integer.valueOf(s.substring(i-2, i));
+            
+            // is 1 digit case valid?
+            if (oneDigits >= 1){
+                dp[i] += dp[i-1];
+            }
+            
+            // is the 2 digit case valid?
+            if(twoDigits >= 10 && twoDigits <= 26) {
+                dp[i] += dp[i-2];
+            }
+        }
+        return dp[s.length()];
+    }
+}
+// 2
+class Solution {
+    public int numDecodings(String s) {
+        int[] dp = new int[s.length()+1];
+        // corner case
+        if (s.charAt(0) == '0') return 0;
+        
+        dp[0] = 1;
+        dp[1] = 1; 
+        
+        for (int i = 2; i< s.length()+1; i++){
+            
+            if (s.charAt(i-1) == '0'){ 
+                if (s.charAt(i-2) > '2' || s.charAt(i-2) == '0') return 0;
+                dp[i] = dp[i-2];
+            }else{   
+                if (s.charAt(i-2) != '0' && Integer.valueOf(s.substring(i-2, i)) <= 26) {
+                    dp[i] = dp[i-1]+dp[i-2];            
+                }else{
+                    dp[i] = dp[i-1];        
+                }
+            }
+        }
+        return dp[s.length()];
+    }
+}
+// 3
+class Solution {
+    public int numDecodings(String s) {
+        // corner case
+        if (s.charAt(0) == '0') return 0;
+        
+        int prev = 1;
+        int cur = 1; 
+        
+        for (int i = 1; i< s.length(); i++){
+            int temp = cur;
+            if (s.charAt(i) == '0'){ 
+                if (s.charAt(i-1) > '2' || s.charAt(i-1) == '0') return 0;
+                // dp[i] = dp[i-2];
+                cur = prev;
+            }else{   
+                if (s.charAt(i-1) != '0' && Integer.valueOf(s.substring(i-1, i+1)) <= 26) {
+                    // dp[i] = dp[i-1]+dp[i-2];     
+                    cur = cur + prev;
+                }
+            }
+            prev = temp;
+        }
+        return cur;
+    }
+}
+
+// 5. Longest Palindromic Substring
+
+class Solution { // expand around center Time: O(n^2) / Space: O(1) 
+
+    public String longestPalindrome(String s) {
+        if (s == null || s.length()< 1) return "";
+        int start = 0;
+        int end = 0;
+        for (int i=0; i<s.length(); i++){
+            int len1 = expand(s, i, i);     // odd
+            int len2 = expand(s, i, i+1);   // even
+            int len = Math.max(len1, len2);
+            if (len > end - start) {
+                // i is at the center, to find start and end index
+                start = i - ((len -1)/2);
+                end = i + (len/2);
+                System.out.println("start: " + start + " end: " + end);
+            }
+        }
+        return s.substring(start, end+1);
+    }
+    
+    public int expand(String s, int left, int right){
+        // invalided bounday  
+        if (s == null || left > right) return 0;
+        
+        // keep expanding until false
+        while (left >= 0 && right<s.length() && s.charAt(left) == s.charAt(right)) {
+            left--;
+            right++;
+        }
+        System.out.println( " left: " + left + " right: "+ right +  " mines: "+ (right - left - 1));
+        return right - left - 1;
+    }
+}
+
+class Solution { // DP -> O(n^2) / Space: O(n^2) 
+
+    public String longestPalindrome(String s) {
+        int n = s.length();
+        
+        if(s == null || s.length() < 2) {
+            return s;
+        }
+        boolean[][] dp = new boolean[n][n];
+        int left = 0;
+        int right = 0;
+        
+        for (int r = 0; r < n; r++){
+            for (int l = 0; l < r; l++){
+                boolean innerPal = dp[l+1][r-1] || r-l <= 2;
+                if (s.charAt(l) == s.charAt(r) && innerPal){
+                    dp[l][r] = true;
+                    
+                    if(r-l > right - left){
+                        left = l;
+                        right = r;
+                    }
+                }
+            }
+        }
+        return s.substring(left, right+1);
+    }
+}
+
+
+// 647. Palindromic Substrings
+class Solution {
+    public int countSubstrings(String s) {
+        int n = s.length();
+        int count = 0;
+        boolean [][] dp = new boolean[n][n];
+        
+        for(int i = 0; i < n;i++) {
+            dp[i][i] = true;
+            count++;
+        }
+        
+        // outter loop is the right index
+        for (int r = 0; r < n; r++){
+            // inner loop is the left index
+            for (int l = 0; l < r; l++){
+                boolean innerPal = dp[l+1][r-1] || r-l <= 2;
+                // r-l <= 2 means totsl length is 3, inner is a single char.
+                if (s.charAt(r) == s.charAt(l) && innerPal){
+                    dp[l][r] = true;
+                    count++;                   
+                } 
+            } 
+        }
+        return count;
+    }
+}
+
+class Solution {
+    int count;
+    public int countSubstrings(String s) {
+        count = 0;
+        for(int i=0; i<s.length(); i++){
+            checkPalindrome(s, i, i);
+            checkPalindrome(s, i, i+1);
+        }
+        return count;
+    }
+    
+    void checkPalindrome(String s, int low, int high){
+        if(low > high) return;
+        while(low >= 0 && high < s.length() && s.charAt(low) == s.charAt(high)){
+            count++;
+            low--;
+            high++;
+        }
+    }
+}
+
+// 146. LRU Cache    
+// HashMap + doubly linkedlist
+// less code consider LinkedHashMap 
+
+class LRUCache {
+    // Node class for doubly LinkedList
+    class Node{
+        int key, value;
+        Node prev, next;
+        // constructor
+        Node(){ 
+        }
+        Node(int key, int value){
+            this.key = key;
+            this.value = value;           
+        }
+    }
+
+    // fields
+    final Node head = new Node();
+    final Node tail = new Node();
+    Map<Integer, Node> map;
+    int cap;
+    
+    public LRUCache(int capacity) {
+        map = new HashMap(cap);
+        this.cap = capacity;
+        // connect the linkedlist
+        head.next = tail;
+        tail.prev = head;
+    }
+    
+    public int get(int key) {
+        int res = -1;
+        Node n = map.get(key);
+        if (n != null){
+            res = n.value;
+            // always reorganize the node.
+            remove(n);
+            add(n);
+        }
+        return res;
+    }
+    
+    public void put(int key, int value) {
+        // check if already exist a key holding the node
+        Node e = map.get(key); 
+        // if the key already exist, only change the value of the Node.
+        if (e != null) {
+            e.value = value;
+            remove(e);
+            add(e);
+        }else{
+            // check if the cache capacity is full.
+            if (map.size() == cap) {
+                // remove the node from the map;
+                map.remove(tail.prev.key); // refrence to the key.
+                // remove the node at the end of the linkedlist
+                remove(tail.prev);
+            }
+            Node n = new Node(key, value);
+            // add it to the linkedlist and the hashmap
+            add(n);
+            map.put(key, n);
+        }
+        
+    }
+    
+    public void remove(Node n){
+        n.prev.next = n.next;
+        n.next.prev = n.prev;
+        
+//         Node nx = n.next;
+//         Node p = n.prev;
+        
+//         nx.prev = p;
+//         p.next = nx;
+    }
+    
+    public void add(Node n){
+        // always add to the front
+        // save head.next before break the link
+        Node temp = head.next;
+        head.next = temp;
+       
+        n.prev = head; 
+        n.next = temp;
+        
+        head.next = n;
+        temp.prev = n;
+    }
+}
+
+/**
+ * Your LRUCache object will be instantiated and called as such:
+ * LRUCache obj = new LRUCache(capacity);
+ * int param_1 = obj.get(key);
+ * obj.put(key,value);
+ */
+
+// 127. Word Ladder
+class Solution { // basketwang solution
+    
+    HashMap<String, List<String>> map = new HashMap<>();
+    
+    public void buildMap(List<String> wordList, String beginWord){
+        
+        if (!wordList.contains(beginWord)){
+            wordList.add(beginWord);
+        }
+        
+        for (String s: wordList){
+            List<String> list = new LinkedList<String>();
+            // index is the word, add empty list to the map first
+            map.put(s, list); 
+            // then loop through the wordList find the words only diff in one char
+            for (String next: wordList){
+                if (diff(s, next) == 1) {  
+                    // add to the list if the words only diff in one char
+                    map.get(s).add(next);
+                }
+            }
+        } 
+    }
+    
+    public int diff(String s, String t) {
+        int count = 0;
+        for(int i = 0; i < s.length(); i++){
+            if (s.charAt(i) != t.charAt(i)) count++;
+        }
+        return count;
+    }
+    
+    public int ladderLength(String beginWord, String endWord, List<String> wordList) {
+        if (beginWord.equals(endWord)) return 0;
+        buildMap(wordList, beginWord);
+        Set<String> set = new HashSet<>();
+        Queue<String> queue = new LinkedList<String>();
+        
+        queue.offer(beginWord);
+        set.add(beginWord);
+        
+        int step = 1;
+        while (queue.size() !=0){
+            int size = queue.size();
+            for(int i = 0; i<size; i++) {
+                String cur = queue.poll();
+                if (cur.equals(endWord)) return step;
+                List<String> next = map.get(cur);
+                for (String n: next){
+                    if(!set.contains(n)){
+                        queue.offer(n);
+                        set.add(n);
+                    }
+                }
+            }
+            step++;
+        }
+        return 0;
+    }
+}
+
+
+// BFS : using queue
+// DFS : using recursion or stack
+
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+
+//  814. Binary Tree Pruning
+class Solution { // DFS:using recursion or stack // BFS: using queue
+    public TreeNode pruneTree(TreeNode root) {
+        if (root == null) return null;
+        dfs(root);
+        return root;
+    }
+    
+    public boolean dfs(TreeNode n){
+        if (n == null) return false;
+        boolean left = dfs(n.left);
+        boolean right = dfs(n.right);
+        
+        // pruning the tree if the return value from recusive call is false 
+        if (!left) { 
+            n.left = null;
+        }
+        if (!right) {
+            n.right = null;
+        }    
+        return n.val == 1 || left || right;
+    }
+}
+
+// Time Complexity: O(N), where N is the number of nodes in the tree. We process each node once.
+
+// Space Complexity: O(H), where H is the height of the tree. This represents the size of the implicit call stack in our recursion.
