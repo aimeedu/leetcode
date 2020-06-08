@@ -2523,7 +2523,7 @@ class Solution { // basketwang solution
 }
 
 
-// BFS : using queue
+// BFS : using queue; key word: from top to bottom
 // DFS : using recursion or stack
 
 /**
@@ -2569,3 +2569,141 @@ class Solution { // DFS:using recursion or stack // BFS: using queue
 // Time Complexity: O(N), where N is the number of nodes in the tree. We process each node once.
 
 // Space Complexity: O(H), where H is the height of the tree. This represents the size of the implicit call stack in our recursion.
+
+// 111. Minimum Depth of Binary Tree
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution { // DFS  // Time Complexity: O(N),  // Space Complexity: O(H), call stack in recursion
+    public int minDepth(TreeNode root) {
+        if (root == null) return 0;
+  
+        return dfs(root);
+        
+    }
+    public int dfs(TreeNode n){
+        if (n == null) return 0;
+        
+        int left = dfs(n.left);
+        int right = dfs(n.right);
+        
+        if(left == 0) return right + 1;
+        if(right == 0) return left + 1;
+        
+        return Math.min(left, right) + 1;
+    }   
+}
+
+// try BFS
+
+// 199. Binary Tree Right Side View  
+// Time: O(n); Space O(n) for a linkedlist tree, average is O(height)
+class Solution {
+    public List<Integer> rightSideView(TreeNode root) {
+        List<Integer> ans = new ArrayList<>();
+        if (root == null) return ans;
+        
+        Queue<TreeNode> queue = new LinkedList<>();
+        queue.offer(root);
+        
+        while(!queue.isEmpty()){
+            int size = queue.size();
+            for (int i = 0; i < size; i++){
+                // take out node form queue
+                TreeNode n = queue.poll();
+                if (i == size-1) {
+                    ans.add(n.val);
+                }
+                if (n.left != null) {
+                    queue.offer(n.left);
+                }
+                if (n.right != null) {
+                    queue.offer(n.right);
+                }
+            }
+        }
+        return ans;
+    }
+}
+
+// 56. Merge Intervals
+class Solution {
+    public int[][] merge(int[][] intervals) {
+        if(intervals.length < 2) return intervals;
+        Arrays.sort(intervals, (a1, a2) -> Integer.compare(a1[0], a2[0]));
+        
+        List<int[]> ans = new ArrayList();
+        int [] cur = intervals[0];
+        ans.add(cur);
+        
+        for (int[] i : intervals) {
+            int st = cur[0];
+            int end = cur[1];
+            int next_st = i[0];
+            int next_end = i[1];
+            
+            if (end >= next_st) {
+                cur[1] = Math.max(end, next_end);
+            } else {
+                // no need to merge, add to the ans
+                cur = i;
+                ans.add(cur);
+            }
+        }
+        return ans.toArray(new int[ans.size()][]);
+    }
+}
+
+
+// 79. Word Search
+// Since the board is n^2, Time: O(n^2); Space O(n^2) -> recusion call stack
+// or Time: O(n); Space O(n), where n is number of cells on the board, they are the same
+
+class Solution { // not a fast solution
+    public boolean exist(char[][] board, String word) {
+        for (int i = 0; i < board.length; i++) {
+            for (int j = 0; j < board[i].length; j++) {
+                // check if the first letter in the string matches the current letter on the board.
+                // then check if the remaining letter matches from the value of dfs method.
+                // return true if both conditions satisfied, otherwise, return false.
+                if (word.charAt(0) == board[i][j] && dfs(i,j,0, board, word)) return true; 
+            }
+        }
+        return false;
+    }  
+
+    public boolean dfs(int i, int j, int index, char[][] board, String word){
+        // finish checking every char in the string
+        if (index == word.length()) return true;
+        // if the go out of the board or the letter does not match the letter at the current index
+        if (i<0 || j<0 || i >= board.length || j >= board[i].length || word.charAt(index) != board[i][j]) return false;
+
+        // remember the char in the current cell, then set it to empty for not using again
+        // set it back when returen form the recursive call
+        char mem = board[i][j];
+        board[i][j] = ' ';
+
+        // dfs 4 directions, OR 4 results, only 1 valid will return true
+        // index + 1 is for checking the next letter
+        boolean exist = dfs(i+1, j, index+1, board, word) ||
+                        dfs(i-1, j, index+1, board, word) ||
+                        dfs(i, j+1, index+1, board, word) ||
+                        dfs(i, j-1, index+1, board, word);
+
+        board[i][j] = mem;
+
+        return exist;
+    }   
+}
