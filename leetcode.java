@@ -2176,7 +2176,8 @@ class Solution {
         dp[1] = s.charAt(0) == '0' ? 0 : 1; // if the first char is 0, 0 way to decode, else 1 way to decode.
         
         for (int i = 2; i<= s.length(); i++){
-            int oneDigits = s.charAt(i-1) - '0';
+            // int oneDigits = s.charAt(i-1) - '0';
+            int oneDigit = Integer.valueOf(s.substring(i-1, i));
             int twoDigits = Integer.valueOf(s.substring(i-2, i));
             
             // is 1 digit case valid?
@@ -2188,6 +2189,8 @@ class Solution {
             if(twoDigits >= 10 && twoDigits <= 26) {
                 dp[i] += dp[i-2];
             }
+
+            // no need to takecare of the 0 case, because the array initilized to 0.
         }
         return dp[s.length()];
     }
@@ -2219,7 +2222,7 @@ class Solution {
     }
 }
 // 3
-class Solution {
+class Solution {  Space O(1)
     public int numDecodings(String s) {
         // corner case
         if (s.charAt(0) == '0') return 0;
@@ -2242,6 +2245,59 @@ class Solution {
             prev = temp;
         }
         return cur;
+    }
+}
+
+// 4, as 10/08/2020  O(n)/O(n)
+class Solution {
+    public int numDecodings(String s) {
+        // +1 because we have 0 length add to the front.
+  
+        int dp[] = new int[s.length()+1];
+        
+        // when the string length is 0, no way to decode, it count as 1 way.
+        dp[0] = 1;
+        // when the string length is 1. 
+        // check if the number is 0. if 0, then 0 way to decode.
+        // 1-9, 1 way to decode.
+        dp[1] = s.charAt(0) == '0' ? 0 : 1;
+       
+        // this is not checking the string contains 0. now lets add the case with 0 present.
+        for(int i = 2; i < s.length()+1; i++){
+            
+            // System.out.println(s.charAt(i-1));
+            // invalid case: ...(30), 0 as last digit can not stand alone. return 0;
+            // validcase: ...(20) or ...(10), 0 and 2nd last digit must go together. return dp[i-2]
+            if (s.charAt(i-1) == '0'){
+                // 10, 20
+                if(s.charAt(i-2) == '1' || s.charAt(i-2) == '2'){
+                    dp[i] = dp[i-2];
+                    // System.out.println("dp[i-2]");
+                    // System.out.println(dp[i]);
+                }
+                // 00, 30, 40....90
+                else return 0;
+            }
+            // if current digit is not 0.
+            else{ 
+                // 2 digit -> 10-26
+                if (Integer.valueOf(s.substring(i-2, i)) <= 26 && Integer.valueOf(s.substring(i-2, i)) >= 10){
+                    dp[i] = dp[i-1] + dp[i-2];
+                    // System.out.println("dp[i-1] + dp[i-2]");
+                    // System.out.println(dp[i]);
+                }
+                
+                else {
+                    dp[i] = dp[i-1];
+                    // System.out.println("dp[i-1]");
+                    // System.out.println(dp[i]);
+                }
+            }
+            
+            // System.out.println(dp[i]);
+        }
+        
+        return dp[s.length()];
     }
 }
 
