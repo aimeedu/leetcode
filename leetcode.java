@@ -471,22 +471,32 @@ class Solution {
 
 // 322. Coin Change
 class Solution {
+    // 1 <= coins.length <= 12 is a constant
+    // Runtime: O(n*12), where n is the dp array's length.
+    // Space: O(n)
     public int coinChange(int[] coins, int amount) {
-        int[] dp = new int[amount + 1];
-        Arrays.fill(dp, amount + 1);
-        // fill the dp array with amount+1. since # of ways is as much as amount.
+        // index represent the amount,
+        // value representthe minimal coins conbination, it's the count.
+        int dp[] = new int [amount +1];
+        
+        // amount +1 let us to check if there are no coin cobinations. 
+        // the amount is as much as it self.
+        Arrays.fill(dp, amount +1);
+        
+        // zero coin to make amount 0.
         dp[0] = 0;
-        // int ans = 0;
-        for (int i = 0; i < dp.length; i++) {
-            for (int c = 0; c < coins.length; c++) {
-                if (i >= coins[c]) {
-                    dp[i] = Math.min(dp[i - coins[c]] + 1, dp[i]);
+        
+        for (int i = 1; i< amount +1; i++) {
+            for (int j = 0; j < coins.length; j++){
+                if (i >= coins[j]){
+                    // dp[i-coins[j]]+1
+                    // go to the proper coin amount in dp array, and +1 means add 1 coin to the result.
+                    // always add 1 coin if you can find the subproblem in dp array.
+                    dp[i] = Math.min(dp[i], dp[i-coins[j]]+1);
                 }
-            } // end loop coins array
-        } // end finding min for dp[i];
+            }
+        }       
         return dp[amount] > amount ? -1 : dp[amount];
-        // dp[amount] > amount, it's going to be -1
-        // coin = [3], amount = 2; dp[2] = 3 > amount which is 2.
     }
 }
 
