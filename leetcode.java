@@ -2773,3 +2773,114 @@ class Solution { // not a fast solution
         return exist;
     }   
 }
+
+
+// 202. Happy Number  - Time: O(n), Space: O(n), extra space for hash set? not sure.
+class Solution {
+    public boolean isHappy(int n) {
+        // use set, because if same sum appear(means trap in a cycle),
+        // return false if the sum already in the set. this is the time to break the loop.
+        Set<Integer> s = new HashSet<>();
+        int digit;
+        
+        while(s.add(n)){
+            int sum = 0;
+            
+            while(n > 0){
+                digit = n % 10;
+                n = n/10;
+                sum += digit*digit;
+            }
+            n = sum;
+            if (sum == 1) return true;
+        }
+        return false;
+    }
+}
+
+// 20. Valid Parentheses - Time: O(n) / Space: O(n)
+class Solution {
+    public boolean isValid(String s) {
+        Stack<Character> stack = new Stack();
+        for (int i = 0; i< s.length(); i++){
+            // when there are element on the stack, check the ASCII # of those parentheses.
+            // () differ by 1, {} and [] differ by 2.
+            if (!stack.isEmpty() && (s.charAt(i) - stack.peek() == 1 || s.charAt(i) - stack.peek() == 2)){
+                stack.pop();
+            }else{
+                stack.push(s.charAt(i));
+            } 
+        }
+        if(stack.isEmpty()){
+            return true;
+        }else{
+            return false;
+        }
+    }
+}
+
+// 268. Missing Number - Time: O(n), Space: O(1)
+class Solution {
+    public int missingNumber(int[] nums) {
+        // assume theremust be 1 missing number.
+        // we are no deal with the case when no number is missing.
+        int total=0;
+        int n = nums.length;
+        
+        // from [1, n], we can use the formula to calculate the sum n(n-1)/2.
+        // form [0, n], the length of the array + 1, so the sum of no number missing is (n+1)*n/2;
+        int sum = (n+1)*n/2;
+        
+        for(int i = 0; i<nums.length; i++){
+            total += nums[i];
+        }
+        // difference between sum and total is the missing number.
+        return sum-total;
+    }
+}
+
+
+// 416. Partition Equal Subset Sum
+
+// Time: O(2^n) with out memorization -> n*m?
+// space: O(n) where n is the length of the array? I think is n*m the size of the hashmap.
+
+
+class Solution { // memoization, dp solution will avoid recursion.
+    public boolean canPartition(int[] nums) {
+      
+        int total = 0;
+        
+        // total is odd, no way to partition.
+        for(int n: nums){
+            total += n;         
+        }
+        System.out.println(total);
+        if (total % 2 != 0) return false;
+
+        
+        return dfs(nums, 0, 0, total/2, new HashMap<String, Boolean>());
+    }
+    
+    
+    public boolean dfs(int[] nums, int index, int sum, int half_total, HashMap<String, Boolean> map){
+        // record {T or F (value)} at {current index and curren sum (key)}.
+        String state = index + " " + sum;
+        
+        if (map.containsKey(state)) return map.get(state); // return T or F
+        
+        else {
+            if (sum == half_total) return true;      
+            if (sum > half_total || index >= nums.length) return false;
+        }
+        
+        // 2 case, include current num or not include
+            
+        Boolean result = dfs(nums, index+1, sum+nums[index], half_total, map) || dfs(nums, index+1, sum, half_total, map);
+        
+        map.put (state, result);
+        
+        return result;
+    }
+    
+}
