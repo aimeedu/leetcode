@@ -2675,7 +2675,7 @@ class Solution { // DFS  // Time Complexity: O(N),  // Space Complexity: O(H), c
 // try BFS
 
 // 199. Binary Tree Right Side View  
-// Time: O(n); Space O(n) for a linkedlist tree, average is O(height)
+// Time: O(n) for a linkedlist tree, average is O(height); Space O(n) 
 class Solution {
     public List<Integer> rightSideView(TreeNode root) {
         List<Integer> ans = new ArrayList<>();
@@ -2883,4 +2883,35 @@ class Solution { // memoization, dp solution will avoid recursion.
         return result;
     }
     
+}
+
+// 430. Flatten a Multilevel Doubly Linked List 
+// Time: O(n)   / Space : O(n)
+class Solution {
+    public Node flatten(Node head) {
+        if (head == null) return null;    
+        // set an iterative pointer.
+        Node cur = head;     
+        // store the leftover Node at current level when branch to the child Node.
+        Stack<Node> s = new Stack<>();      
+        while(cur != null) {        
+            if (cur.child != null){                
+                if (cur.next != null){
+                    s.push(cur.next);
+                } 
+                cur.next = cur.child;
+                cur.child.prev = cur;
+                cur.child = null;
+            }
+            else {
+                if (cur.next == null && !s.isEmpty()){
+                    cur.next = s.pop();
+                    cur.next.prev = cur;
+                }
+            }
+            cur = cur.next;              
+        } 
+        // cur is a pointer, move along to the end, so always return head.
+        return head;
+    }
 }
