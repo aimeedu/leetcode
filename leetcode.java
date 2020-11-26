@@ -1151,21 +1151,26 @@ class Solution {
 
 // 387. First Unique Character in a String
 class Solution {
+    // Time complexity : O(N) since we go through the string of length N two times.
+    // Space complexity : O(1) because English alphabet contains 26 letters.
     public int firstUniqChar(String s) {
-        Map<Character, Integer> map = new HashMap<>();
-        for(int i = 0; i < s.length(); i++) {
-            if (map.containsKey(s.charAt(i))){
-                map.put(s.charAt(i), map.get(s.charAt(i))+1);
-            }
-            else {
-                map.put(s.charAt(i), 1);
-            }
-        }
         
-        for(int i = 0; i<s.length(); i++){
-            if (map.get(s.charAt(i)) == 1)
+        Map<Character, Integer> map = new HashMap<>();
+            
+        for (int i=0; i < s.length(); i++){
+            char cur = s.charAt(i);
+            if (!map.containsKey(cur)) {
+                map.put(cur, 1);
+            }else{
+                map.put(cur, map.get(cur)+1);
+            }
+        }    
+        // search in hashmap as the string order.
+        for (int i=0 ;i<s.length(); i++){
+            if(map.get(s.charAt(i)) == 1){
                 return i;
-        }
+            }
+        }    
         return -1;
     }
 }
@@ -2913,5 +2918,28 @@ class Solution {
         } 
         // cur is a pointer, move along to the end, so always return head.
         return head;
+    }
+}
+
+// 162. Find Peak Element
+class Solution { // binary search, Time: O(n), Space: O(1)
+    public int findPeakElement(int[] nums) {
+        int left = 0;
+        int right = nums.length-1;
+        
+        while(left<right){
+            
+            int mid = (right-left)/2 + left;
+                
+            if (nums[mid] < nums[mid+1]){
+                // the mid is going to land on left side always because integer division.
+                // so updata left to mid+1 can prevent us trap in the while loop. 
+                left = mid+1; 
+            }else{
+                right = mid;
+            }
+        }
+        // while loop breaks when left == right, so return left or right is the same.
+        return right; 
     }
 }
