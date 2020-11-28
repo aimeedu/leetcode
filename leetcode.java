@@ -435,6 +435,23 @@ class Solution {
 }
 
 // 98. Validate Binary Search Tree
+// Time: O(n), go through every node in the tree. Space: O(n) for a linkedlist tree, stack size.
+class Solution { // hint: give each node a range
+    public boolean isValidBST(TreeNode root) {  
+        // pass max and min;
+        return dfs(root, null, null);      
+    }
+    public boolean dfs(TreeNode root, Integer min, Integer max){
+        // base case
+        if (root == null) return true;
+        // return false whenever a node is no valid.
+        if ((max != null && root.val >= max) || (min != null && root.val <= min)){
+            return false;
+        }
+        return dfs(root.left, min, root.val) && dfs(root.right, root.val, max);
+    }
+}
+
 class Solution {
     public boolean isValidBST(TreeNode root) {
         return helper(root, Long.MIN_VALUE, Long.MAX_VALUE);
