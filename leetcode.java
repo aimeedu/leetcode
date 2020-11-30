@@ -2960,3 +2960,175 @@ class Solution { // binary search, Time: O(n), Space: O(1)
         return right; 
     }
 }
+
+// 24. Swap Nodes in Pairs
+/**
+ * Definition for singly-linked list.
+ * public class ListNode {
+ *     int val;
+ *     ListNode next;
+ *     ListNode() {}
+ *     ListNode(int val) { this.val = val; }
+ *     ListNode(int val, ListNode next) { this.val = val; this.next = next; }
+ * }
+ */
+class Solution { // Time: O(n), Space: O(1)
+    public ListNode swapPairs(ListNode head) {
+        
+        // add a dummy node at the front
+        ListNode d = new ListNode(0, head);
+        
+        // cur is a pointer to walk through the list
+        ListNode cur = d;
+        
+        while (cur.next != null && cur.next.next != null){
+            
+            // p1 is the 1st node in pair, p2 is the 2nd node in pair
+            // because we are breaking the link, store the 1st node as p1 (temp node).
+            ListNode p1 = cur.next;
+            
+            // link cur to p2.
+            cur.next = cur.next.next; // cur.next.next at this point is p2
+            
+            // now, link p1 to the node afte p2.
+            p1.next = cur.next.next; // cur.next.next at this point is the node after p2.
+            
+            // link 2nd node's next pointer to p1.
+            cur.next.next = p1; //cur.next.next, 2nd next is the "next" pointer.
+            
+            // skip 2 nodes for next iteration.
+            cur = cur.next.next;
+        }
+
+        return d.next;
+    }
+}
+
+
+// 987. Vertical Order Traversal of a Binary Tree
+// Time : O(nlogn), Space: O(n)?
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode() {}
+ *     TreeNode(int val) { this.val = val; }
+ *     TreeNode(int val, TreeNode left, TreeNode right) {
+ *         this.val = val;
+ *         this.left = left;
+ *         this.right = right;
+ *     }
+ * }
+ */
+class Solution {
+    public List<List<Integer>> verticalTraversal(TreeNode root) {
+        
+        // the return type
+        List<List<Integer>> ans = new ArrayList<>();
+        
+        // priority queue for sorting when 2 nodes are at the same place.
+        // TreeMap is ordered HashMap
+        TreeMap<Integer, TreeMap<Integer, PriorityQueue<Integer>>> map = new TreeMap<>();
+        
+        // call helper function
+        dfs(root, 0 , 0, map);
+        
+        // print every thing in the tree map
+        for (TreeMap<Integer, PriorityQueue<Integer>> x : map.values()){
+
+            List<Integer> cur = new ArrayList<>();
+            
+            for(PriorityQueue<Integer> y: x.values()){
+                while(!y.isEmpty()){
+                    cur.add(y.poll());
+                }     
+            } 
+            ans.add(cur);   // add inner list to the ans list        
+        }
+        return ans;
+    }
+    
+    private void dfs(TreeNode root, int x, int y, TreeMap<Integer, TreeMap<Integer, PriorityQueue<Integer>>> map){
+        if (root == null) return;
+        
+        // outter layer, for same x positioon.
+        if (!map.containsKey(x)){
+            map.put(x, new TreeMap<>());
+        }
+        
+        // inner layer, for same y position
+        if (!map.get(x).containsKey(y)){
+            map.get(x).put(y, new PriorityQueue<>());
+        }
+        map.get(x).get(y).offer(root.val);   
+        dfs(root.left, x-1, y+1, map);
+        dfs(root.right, x+1, y+1, map);        
+    }  
+}
+
+// 252. Meeting Rooms
+
+class Solution { // Time: O(nlogn)  Space: O(1)
+    public boolean canAttendMeetings(int[][] intervals) {      
+        if (intervals.length <= 1) return true;        
+        // sort by start time.
+        // sorting take O(nlogn)
+        Arrays.sort(intervals, (a,b) -> Integer.compare(a[0], b[0]));        
+        for (int i=1; i<intervals.length; i++){
+            // if the end time is less than the start time of the previous meeting. it's overlapped.
+            if (intervals[i][0]< intervals[i-1][1]) return false;
+        }
+        return true;
+    }
+}
+
+class Solution { // use extra space
+    public boolean canAttendMeetings(int[][] intervals) {      
+        Set<Integer> set = new HashSet<>();        
+        for (int i=0; i<intervals.length; i++){
+            int start = intervals[i][0];
+            int end = intervals[i][1];
+            // add the all the elements form the interval to the set
+            // [1,3],[3,6] is a valid solution.
+            // Thus, when add intervals, we exclude the last element, [1,3), [3,6)
+            for (int j=start; j<end; j++){
+                if (set.contains(j)) return false;
+                set.add(j);
+            }
+        }
+        return true;
+    }
+}
+
+// 253. Meeting Rooms II   Time:O(nlogn)->sorting / Space: O(n)
+class Solution {
+    public int minMeetingRooms(int[][] intervals) {
+        if (intervals == null || intervals.length == 0) return 0; 
+        // arrays for start time
+        int[] start = new int[intervals.length]; 
+        // arrays for end time
+        int[] end = new int[intervals.length];
+        int ans = 0;
+        
+        for (int i = 0; i< intervals.length; i++){
+            start[i] = intervals[i][0];
+            end[i] = intervals[i][1];
+        }
+        
+        Arrays.sort(start);
+        Arrays.sort(end);
+        
+        int endPointer = 0;
+        for (int i=0; i<start.length; i++){
+            if (start[i] < end[endPointer]) {
+                ans++;
+            }
+            else {
+                endPointer++;
+            }
+        }
+        return ans;
+    }
+}
