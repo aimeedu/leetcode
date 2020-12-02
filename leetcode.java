@@ -2452,6 +2452,126 @@ class Solution {
 // HashMap + doubly linkedlist
 // less code consider LinkedHashMap 
 
+
+// Doubly linkedlist: remove a node in Time O(1)
+// HashMap: get/put in O(1)
+// Space: O(n)
+
+class Node{
+    int key, value;
+    Node prev, next;
+}
+
+class LRUCache {
+
+    // specify all the fields.
+    // use final when it's fixed, not going to change.
+    final Node head = new Node();
+    final Node tail = new Node();
+    Map<Integer, Node> map;
+    int capacity;
+    
+    public LRUCache(int capacity) {
+        map = new HashMap<>(capacity);
+        this.capacity = capacity; 
+        // link head and tail when initialize.
+        head.next = tail;
+        tail.prev = head;
+    }
+    
+    public int get(int key) {
+        // get Node form the map, check if the node is null.
+        // if the value exist, [remove] the node and [insert] at front, and return the value ; 
+        // if not exist, return -1 ;
+        
+        // Returns the value to which the specified key is mapped, or null if this map contains no mapping for the key.
+        Node n = map.get(key);
+        int val = -1;
+        
+        if (n != null){
+            remove(n);
+            insert(n);
+            val = n.value;
+        }
+        return val;
+
+    }
+    
+    public void put(int key, int value) {
+        // if the key exist, update the value, and [remove] it, [insert] at front. 
+        // check the capacity.
+        // if exceed the cap. [remove] the last node, and [insert] the new node at front.
+        Node n = map.get(key);
+        
+        if (n == null){
+            
+            Node i = new Node();
+            i.value = value;
+            i.key = key;
+            
+            if (map.size() == this.capacity) {
+                // remove last
+                map.remove(tail.prev.key); // remove from hashmap !!!!!!!
+                remove(tail.prev); // remove from linkedlist
+            }       
+            // when you get a new key, always put it in the hashmap !!!!!
+            map.put(key ,i);
+            // insert node i at front of linkedlist;
+            insert(i);
+        }else{ // key is present, only update the value, no need to check the capacity
+            // update the value
+            n.value = value;
+            // remove it from it's position
+            remove(n);
+            // insert at front
+            insert(n);
+        }    
+    }
+    
+    // helper function
+    private void insert(Node c){ // add between head and head.next
+        c.prev = head;
+        c.next = head.next;
+        
+        head.next = c;
+        c.next.prev = c;
+        
+//         Node head_nx = head.next;
+        
+//         head.next = c;
+//         c.prev = head;
+        
+//         head_nx.prev = c;
+//         c.next = head_nx;
+    }
+    
+    private void remove(Node c){
+        // modify c's prev node's and next node's pointer.
+        c.prev.next = c.next;
+        c.next.prev = c.prev;
+        // point c's prev and next to null;
+        c.prev = null;
+        c.next = null;
+        
+//         // store 2 nodes before and after c;
+//         Node prev_n = c.prev;
+//         Node next_n = c.next;
+        
+//         // link 2 nodes
+//         prev_n.next = next_n;
+//         next_n.prev = prev_n;      
+    }   
+}
+
+/**
+ * Your LRUCache object will be instantiated and called as such:
+ * LRUCache obj = new LRUCache(capacity);
+ * int param_1 = obj.get(key);
+ * obj.put(key,value);
+ */
+
+
+
 class LRUCache {
     // Node class for doubly LinkedList
     class Node{
@@ -3130,5 +3250,37 @@ class Solution {
             }
         }
         return ans;
+    }
+}
+
+// 1209. Remove All Adjacent Duplicates in String II
+// Time: O(n) / Space: O(n) 
+class Solution {
+    public String removeDuplicates(String s, int k) {
+        Stack<Integer> counts = new Stack<>();      
+        Stack<Character> letters = new Stack<>();        
+        char[] arr = s.toCharArray();
+        for (char c : arr){
+            if (!letters.isEmpty() && letters.peek() == c){
+                counts.push(counts.pop()+1);
+                if(counts.peek() == k){
+                    counts.pop();
+                    letters.pop();
+                } 
+            }
+            else{
+                letters.push(c);
+                counts.push(1);
+            }
+        }        
+        StringBuilder sb = new StringBuilder();
+        while(!letters.isEmpty()){
+            char l = letters.pop();
+            int n = counts.pop();
+            for (int i= 0; i<n;i++){
+                sb.insert(0, l);
+            }   
+        }
+        return sb.toString();
     }
 }
