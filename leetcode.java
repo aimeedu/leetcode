@@ -2847,6 +2847,26 @@ class Solution {
 }
 
 // 56. Merge Intervals
+// Space: O(n) / Time: O(nlogn) for sorting
+class Solution {
+    public int[][] merge(int[][] intervals) {
+        
+        List<int[]> ans = new ArrayList<>();
+        
+        // sort by the starting time. ascending.
+        Arrays.sort(intervals, (a, b) -> (a[0] - b[0]));
+        
+        for(int[] cur: intervals){
+            if (ans.isEmpty() || cur[0] > ans.get(ans.size()-1)[1]){
+                ans.add(cur);
+            }else{ // compare current finish time and modify the finish time of last position of answer array.
+                ans.get(ans.size()-1)[1] = Math.max(cur[1], ans.get(ans.size()-1)[1]);
+            }
+        } 
+        return ans.toArray(new int[ans.size()][]);
+    }
+}
+
 class Solution {
     public int[][] merge(int[][] intervals) {
         if(intervals.length < 2) return intervals;
@@ -2877,7 +2897,8 @@ class Solution {
 
 // 79. Word Search
 // Since the board is n^2, Time: O(n^2); Space O(n^2) -> recusion call stack
-// or Time: O(n); Space O(n), where n is number of cells on the board, they are the same
+// or Time: O(n); Space O(n)-> recursive stack call 
+// where n is number of cells on the board, they are the same
 
 class Solution { // not a fast solution
     public boolean exist(char[][] board, String word) {
@@ -3282,5 +3303,374 @@ class Solution {
             }   
         }
         return sb.toString();
+    }
+}
+
+
+
+// 797. All Paths From Source to Target  O(2^N * N)
+/**?
+Typically DFS = O(V + E) => O(n + 2^n) for the graph
+There are 2^n paths in a graph, where n is the number of nodes because each node can be in the path or not.
+
+Each path may contain n nodes.
+So, map contains n entries where each entry can store 2^n paths of length n.
+Space : O(n * 2^n)
+**/
+class Solution {
+    public List<List<Integer>> allPathsSourceTarget(int[][] graph) {      
+        List<List<Integer>> ans = new ArrayList<>();       
+        // dfs with backtracking. use one path, add or delete a node from that path.
+        List<Integer> path = new ArrayList<>();
+        path.add(0);    
+        dfs(graph, 0, ans, path);       
+        return ans;
+    }  
+    
+    private void dfs(int[][] graph, int node, List<List<Integer>> ans, List<Integer> path){
+        // base case:
+        // if the last node is n-1;
+        // what if the last node is not n-1? not matter in this question.
+        if (node == graph.length-1) {
+            // add current path to the final answer, then backtrack.
+            ans.add(new ArrayList<>(path));
+            return;
+        }
+        for (int n : graph[node]){
+            path.add(n);
+            dfs(graph, n, ans, path);
+            path.remove(path.size()-1);            
+        }
+    }
+}
+
+// 1029. Two City Scheduling
+
+// sorting always take O(nlogn),
+// for a sorted array, overall take O(n)
+// Space: O(1)
+
+class Solution {
+    public int twoCitySchedCost(int[][] costs) {
+        int sum = 0;   
+        int mid = costs.length / 2;
+        
+        // sort by the difference of costA and costB.
+        Arrays.sort(costs, 
+                    (int[] p, int[] q) -> (p[0]-p[1] - (q[0]-q[1]))
+                   );
+        
+        for(int i=0; i<costs.length; i++){
+            if(i<mid) sum += costs[i][0];
+            else sum += costs[i][1];
+        }
+        return sum;
+    }
+}
+
+class Solution {
+    public int twoCitySchedCost(int[][] costs) {
+        int sum = 0;   
+        int mid = costs.length / 2;
+        
+        // sort by the difference of costA and costB.
+        Arrays.sort(costs, new Comparator<int[]>(){
+            public int compare(int[] p, int[] q){
+                return (p[0]-p[1]) - (q[0]-q[1]);
+            }
+        });
+        
+        for(int i=0; i<costs.length; i++){
+            if(i<mid) sum += costs[i][0];
+            else sum += costs[i][1];
+        }
+        return sum;
+    }
+}
+
+class Solution { // not efficient
+    public int twoCitySchedCost(int[][] costs) {
+        int sum = 0;   
+        Queue<int[]> q = new PriorityQueue<>((a,b) -> a[1]-b[1]);  
+        for(int i=0; i<costs.length; i++){
+            int diff = costs[i][0] - costs[i][1];
+            int[] arr = new int[]{i, diff};
+            q.offer(arr);
+        }
+    
+        int count = 0 ; 
+        while(!q.isEmpty()){
+            int [] cur = q.poll();
+            if (count < costs.length/2){
+                sum += costs[cur[0]][0];
+                System.out.print(costs[cur[0]][0]);
+                count++;
+            }else{
+                sum += costs[cur[0]][1];
+                count++;
+                System.out.print(costs[cur[0]][1]);
+            }
+        } 
+        return sum;
+    }
+}
+
+// 1396. Design Underground System -> system design problem
+// Time: O(1) for all 3 methods, 
+// Space: O(P+S^2), where SS is the number of stations on the network, and PP is the number of passengers making a journey concurrently during peak time.
+class UndergroundSystem {
+    private Map<String, Pair<Double, Double>> tripMap = new HashMap<>();
+    private Map<Integer, Pair<String, Integer>> checkinMap = new HashMap<>();
+    
+    public UndergroundSystem() {
+        
+    }
+    
+    public void checkIn(int id, String stationName, int t) {
+        checkinMap.put(id, new Pair(stationName, t));
+    }
+    
+    public void checkOut(int id, String stationName, int t) {
+        // lookup the id in checkin map.
+        Pair<String, Integer> p = checkinMap.get(id);
+        String startStation = p.getKey();
+        Integer checkinTime = p.getValue();
+        // look up in the journey map.
+        
+        // make a key for a journey from station A to station B.
+        String routeKey = startStation + "," + stationName; //stationName is the end station.
+        Pair<Double, Double> routeInfo = tripMap.getOrDefault(routeKey, new Pair<>(0.0, 0.0));
+        Double totalTime = routeInfo.getKey();
+        Double count = routeInfo.getValue();
+        
+        // calculate trip time for current id and make changes in tripMap.
+        double tripTime = t - checkinTime;
+        tripMap.put(routeKey, new Pair<>(totalTime + tripTime, count+1));
+        
+        checkinMap.remove(id);        
+    }
+    
+    public double getAverageTime(String startStation, String endStation) {
+        String routeKey = startStation + ","+ endStation;
+        double avg = tripMap.get(routeKey).getKey() / tripMap.get(routeKey).getValue();
+        return avg;
+    }
+}
+
+/**
+ * Your UndergroundSystem object will be instantiated and called as such:
+ * UndergroundSystem obj = new UndergroundSystem();
+ * obj.checkIn(id,stationName,t);
+ * obj.checkOut(id,stationName,t);
+ * double param_3 = obj.getAverageTime(startStation,endStation);
+ */
+
+ 
+// 1169. Invalid Transactions
+ class Solution { // not efficient
+    public List<String> invalidTransactions(String[] transactions) {
+        Set<String> set = new HashSet<>();
+        
+        List<String[]> list = new ArrayList<>();
+        
+        // parse each string, separeate by ",", store in list.
+        for (String tran : transactions){
+            
+            String[] strs = tran.split(",");
+            list.add(strs);
+            // for (String i: strs){
+            //     System.out.println(i);
+            // }            
+        }
+        // sort Collections by new list by time
+        Collections.sort(list, (a,b)->(Integer.parseInt(a[1])-Integer.parseInt(b[1])));
+        
+        // for (String[] i: list){
+        //     for(String j: i){
+        //         System.out.println(j);
+        //     }   
+        // }
+        for(int i = 0; i<list.size(); i++){
+            String[] cur = list.get(i);
+            String s = cur[0] + ","+cur[1] + ","+cur[2] + ","+cur[3];
+            // the amount exceeds $1000
+            if(Integer.parseInt(cur[2]) > 1000){
+                set.add(s);
+            }
+            // 2 transactions within 60 minutes, same name, different city.
+            int j = i-1; // compare with all previuos transactions.
+            int time = Integer.parseInt(cur[1]);
+            while(j>=0){
+                String[] prev = list.get(j);
+                String ps = prev[0] + ","+prev[1] + ","+prev[2] + ","+prev[3];
+                int prevTime = Integer.parseInt(prev[1]);
+                if (time - prevTime > 60) break; // valid for same or different person.
+                if (time-prevTime<=60 && prev[0].equals(cur[0]) && !prev[3].equals(cur[3])){
+                    // add 2 invalid transactions.
+                    if(!set.contains(s)) set.add(s);
+                    if(!set.contains(ps)) set.add(ps);
+                }
+                j--;
+            }
+        } 
+        List<String> res = new ArrayList<>(set);
+        return res;
+    }
+}
+
+
+// 221. Maximal Square/ Time, Space: O(m*n), as large as size of the matrix.
+class Solution {
+    public int maximalSquare(char[][] matrix) {
+        // dp problem, record the square size at each index.
+        // the square is at most m*m or n*n, depend on min(n,m)
+         if (matrix == null || matrix.length == 0) return 0;
+        
+        int row = matrix.length;
+        int col = matrix[0].length;
+        int res = 0;        
+        int dp[][] = new int[row][col];        
+        for (int i=0; i<row; i++){
+            for (int j=0; j<col; j++){
+                if (j == 0 || i==0){
+                    dp[i][j] = Character.getNumericValue(matrix[i][j]);
+                }
+
+                else{
+                    if (Character.getNumericValue(matrix[i][j]) == 0){
+                        dp[i][j] = 0;
+                    }else{
+                        dp[i][j] = 1+Math.min(dp[i-1][j-1],Math.min(dp[i-1][j],dp[i][j-1]));
+                        
+                    }
+                }
+                res = Math.max(res, dp[i][j]);    
+            }
+        }       
+        return res* res;
+    }
+}
+
+
+// 1629. Slowest Key / Time: O(n) one pass, Space:O(1)
+class Solution {
+    public char slowestKey(int[] releaseTimes, String keysPressed) {
+        char res = keysPressed.charAt(0);
+        int max = releaseTimes[0];
+        
+        for (int i=1; i<releaseTimes.length; i++){
+            int cur_duration = releaseTimes[i] - releaseTimes[i-1];
+            // System.out.println(cur_duration);
+            if (cur_duration > max){
+                max = cur_duration;
+                res = keysPressed.charAt(i);
+                // System.out.println(">");
+            }
+            if(cur_duration == max){
+                char cur = keysPressed.charAt(i);
+                // System.out.println("=");
+                // System.out.println(cur);
+                if (cur-res > 0){
+                    res = keysPressed.charAt(i);
+                    // System.out.println(res);
+                }
+            }  
+        }
+        return res;
+    }
+}
+
+// Amazon OA2: cutoffRank
+public class Solution { // TIME LIMIT EXCEED OR MEMORY EXCEED.
+
+    public static void main(String[] args) {
+        int[] nums1 = {100, 50, 50, 25};
+        int[] nums2 = {2,2,3,4,5};
+        int k1 = 3, k2 = 4;
+        System.out.println(cutOffRank(k1,4, nums1));
+        // System.out.println("test 2:");
+        System.out.println(cutOffRank(k2,5, nums2));
+    }
+    public int cutOffRank(int cutOffRank, int num, int[] scores) {
+        
+        TreeMap<Integer, Integer> map = new TreeMap<>((a, b)->b - a);
+        int rank = 1;
+        int count = 0;
+
+        for(int n : scores) {
+        map.put(n, map.getOrDefault(n, 0) + 1);
+        }
+
+        for(Map.Entry<Integer, Integer> e : map.entrySet()) { 
+            if(rank <= cutOffRank){    
+                count += e.getValue();
+                rank += e.getValue();
+            }else{
+                break;
+            }
+        }
+        return count;
+    }
+}
+public class Solution {// Time Complexity: O(n)/ Space Complexity: O(1), score is at most 100, constant
+    public int cutOffRank(int cutOffRank, int num, int[] scores) {
+        int[] freq = new int[100 + 1];
+        for (int score : scores) {
+            freq[score]++;
+        }  
+        int ans = 0;
+        int currentRank = 1;
+
+        for (int i = 100; i >= 0 && currentRank <= cutOffRank; i--) {
+            if (freq[i] == 0) continue;      
+            ans += freq[i];
+            currentRank += freq[i];
+        }
+        return ans;
+    }
+}
+
+// Amazon OA2: Five-Star Sellers
+import java.util.*;
+
+public class Solution {
+
+    private static int diff(int[] pair){
+        // we choose the rating can increase the most.
+        double prev = 1000000 * pair[0]/pair[1];
+        double cur = 1000000 * (pair[0]+1)/(pair[1]+1);
+        return (int)(cur-prev);
+    }
+        
+    public static int fiveStarReviews(int[][] productRatings, int ratingsThreshold) {
+        int count = 0;
+        double sellerRate = 0.0;
+        Queue<int[]> q = new PriorityQueue<>((a,b) -> diff(b) - diff(a));
+        for (int[] i : productRatings){
+          q.offer(i);
+        }
+ 
+        while(sellerRate<ratingsThreshold){
+          // calculate current seler rate.
+          int[][] arr1 = new int[productRatings.length][productRatings[0].length];
+          int[][] arr = q.toArray(arr1);
+          sellerRate = 0.0;
+          for (int i = 0; i<arr.length;i++){     
+            double cur = (arr[i][0] *1.0)/arr[i][1] *100;
+            sellerRate += cur;
+          } 
+          sellerRate /= productRatings.length; 
+          // break if reach the threshold. curren queue elements are from the last iteration.
+          if (sellerRate>=ratingsThreshold) break;
+          // take the product has the most increased rate from queue.
+          int[] temp = q.poll();
+          // add 1 to both numerator and denominator of the taken product.
+          int[] update = {temp[0]+1, temp[1]+1};
+          // put it back to the queue. 
+          q.offer(update);
+          // add 1 to count.
+          count++;
+        }
+        return count;
     }
 }
