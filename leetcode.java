@@ -3635,9 +3635,19 @@ import java.util.*;
 
 public class Solution {
 
+    public static void main(String[] args) {
+        // Test case:
+        int[][] reviews1 = {{4,4},{1,2},{3,6}};
+        int[][] reviews2 = {{2,4},{1,2}};
+        int[][] reviews3 = {{4, 4},{1, 2},{3, 6},{4, 14},{1, 22},{3, 16},{4, 24},{0, 2},{6, 6}};     
+        // System.out.println(fiveStar(reviews1, 77)); // Expected: 3
+        // System.out.println(fiveStar(reviews2, 51));// Expected: 1
+        System.out.println(fiveStarReviews(reviews3, 90)); // Expected: 358
+    }
+
     private static int diff(int[] pair){
         // we choose the rating can increase the most.
-        double prev = 1000000 * pair[0]/pair[1];
+        double prev = 1000000 * pair[0]/pair[1]; 
         double cur = 1000000 * (pair[0]+1)/(pair[1]+1);
         return (int)(cur-prev);
     }
@@ -3672,5 +3682,409 @@ public class Solution {
           count++;
         }
         return count;
+    }
+}
+
+
+// Amazon OA - Count LRU Cache Misses
+import java.util.*;
+import java.io.*;
+import java.lang.*;
+
+public class Solution {
+    public int lruCacheMisses(int num, List<Integer> pages, int maxCacheSize) {
+        int miss = 0;
+        LinkedList<Integer> list = new LinkedList<>();
+        for (Integer i: pages){
+            // hit, remove from it's position.
+            if (list.contains(i)){
+                list.remove(i); // remove the object
+            }else{ // whenever the element is not in the cache, miss+1
+                miss++;
+                if(list.size() == maxCacheSize) list.removeLast();
+            }
+            // Nomatter hit or miss,move it to the front
+            list.addFirst(i);
+        }
+        return miss;
+    }
+}
+// the reverse will output miss correctly
+public class Solution {
+    public int lruCacheMisses(int num, List<Integer> pages, int maxCacheSize) {
+        int miss = 0;
+        List<Integer> list = new LinkedList<>();
+        for (Integer i: pages){
+            // hit, remove from it's position.
+            if (list.contains(i)){
+                list.remove(i); // remove the object
+            }else{ // whenever the element is not in the cache, miss+1
+                miss++;
+                if(list.size()== maxCacheSize) list.remove(0); // remove first
+            }
+            // Nomatter hit or miss, move it, add last
+            list.add(i);
+        }
+        return miss;
+    }
+}
+
+public class Solution {
+    public int lruCacheMisses(int num, List<Integer> pages, int maxCacheSize) {
+        int miss = 0;
+        List<Integer> list = new LinkedList<>();
+        for (int i: pages){
+            // hit, remove from it's position.
+            if (list.contains(i)){
+                list.remove(new Integer(i));
+            }else{ // whenever the element is not in the cache, miss+1
+                miss++;
+                if(list.size()== maxCacheSize) list.remove(0);
+            }
+            // Nomatter hit or miss, move it to the front
+            list.add(i);
+        }
+        return miss;
+    }
+}
+
+
+// 545. Boundary of Binary Tree
+// Time complexity : O(n) One complete traversal of the tree is done.
+// Space complexity : O(n) The recursive stack can grow upto a depth of n. 
+
+class Solution {   
+    List<Integer> ans = new ArrayList<>();   
+    public List<Integer> boundaryOfBinaryTree(TreeNode root) { 
+        
+        if (root == null) return ans;
+        // if (root.left != null) 
+        ans.add(root.val);
+        leftBoundary(root.left);
+        leaf(root.left);
+        leaf(root.right);
+        rightBoundary(root.right);
+        
+        return ans;
+    }
+    
+    private void leftBoundary(TreeNode root){
+
+        if(root == null) return;        
+        if(root.left == null && root.right == null) return;
+        
+        // add node first.
+        ans.add(root.val);
+        
+        if(root.left == null) leftBoundary(root.right);
+        else leftBoundary(root.left);
+    }
+    
+    private void leaf(TreeNode root){
+        if(root == null) return;
+        if(root.left == null && root.right == null) {
+            ans.add(root.val);
+            return;
+        }
+        leaf(root.left);
+        leaf(root.right);
+    }
+    private void rightBoundary(TreeNode root){
+        if(root == null) return;
+        if(root.left == null && root.right == null) return;
+        if(root.right == null) rightBoundary(root.left);
+        else rightBoundary(root.right);
+        // add node last when return.
+        ans.add(root.val);
+    }
+    
+}
+
+// Amazon OA - Multiprocessor System
+import java.util.*;
+public class Main {
+    public static int processor(int[] power, int jobs)
+    {
+      int time = 0;
+      Queue<Integer> q = new PriorityQueue<>((a,b)->b-a);
+      for(int i: power){
+        System.out.println(i);
+        q.offer(i);
+      }
+      while(jobs > 0){
+        int temp = q.poll();
+        System.out.println("out: "+temp);
+        time++;
+
+        q.offer(temp/2);
+        System.out.println("in: "+temp/2);
+        jobs -= temp;
+      }
+      return time;
+    }
+    public static void main(String[] args) {
+        int[] input = {3,1,7,2,4};
+        System.out.println(processor(input, 15));
+    }
+}
+
+// 1071. Greatest Common Divisor of Strings
+// Time: O(M+N), M,N are the lengths of str1 and str2
+// Space: O(1), max depth of the stack is M+N
+class Solution {
+    public String gcdOfStrings(String str1, String str2) {
+        // str1 = "ABC", str2 = "ABCABC"
+        if (str1.length()<str2.length()) return gcdOfStrings(str2, str1);
+        
+        // str1 = "LEET", str2 = "CODE"
+        if (!str1.substring(0, str2.length()).equals(str2)) return "";
+        
+        // base case
+        if (str2.isEmpty()) return str1;
+        
+        // str1-str2
+        return gcdOfStrings(str1.substring(str2.length()), str2);
+    }
+}
+
+// 572. Subtree of Another Tree
+// Time complexity : O(m*n). In worst case(skewed tree) traverse function takes O(m*n) time.
+// Space complexity : O(n). The depth of the recursion tree can go upto n. n refers to the number of nodes in s.
+
+class Solution {
+    public boolean isSubtree(TreeNode s, TreeNode t) {
+        // s and t are non-empty.        
+        // base case
+        if(s==null) return false;
+        // if they are the same tree, return true.
+        if (sameTree(s,t)){
+            return true;
+        }else{ // otherwise, find if subtree exist in left subtree or right subtree.
+            return isSubtree(s.left, t) || isSubtree(s.right, t);
+        }   
+    }
+    private boolean sameTree(TreeNode s, TreeNode t) {
+        // base case
+        if(s==null && t==null) return true;
+        // base case one of s, t are empty.
+        if(s==null || t==null) return false;
+        return s.val==t.val && sameTree(s.left, t.left) && sameTree(s.right, t.right);
+    }        
+}
+
+// 240. Search a 2D Matrix II
+// Time: O(row+col)/ Space:O(1)
+class Solution {
+    public boolean searchMatrix(int[][] matrix, int target) {
+        int row = matrix.length;
+        int col = matrix[0].length;
+        
+        int i=row-1;
+        int j=0;
+
+        //search start from the lower left corner.
+        while(i >= 0 && j < col){
+            
+            if (matrix[i][j] == target) return true;
+            if (matrix[i][j] < target) {
+                j++;
+            }else{
+                i--;  
+            }
+        }
+        return false;
+    }
+}
+
+// Throttling gateway
+// Time: O(n) add array to hashmap; loop through every element in the hashmap.
+// Space: O(n) create hashmap.
+import java.util.*;
+public class Main { 
+    public static void main(String[] args) {
+        // String s = "baccc";
+        // System.out.println(label(s, 2));
+
+        int[] t1 = {1,1,1,1,2}; //output=1
+        int[] t2 = {1,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6,7,7,7,7,11,11,11,11}; // output=7
+        int[] t3 = {1,1,1,1,2,2,2,3,3,3,4,4,4,5,5,5,6,6,6,7,7}; // output=2
+
+        System.out.println(gateway(t1));
+        System.out.println(gateway(t2));
+        System.out.println(gateway(t3));
+    }
+    // Space: O(1), Time: O(n)
+    public static int gateway(int[] arriveTime){ 
+        int drop = 0;
+        for (int i =3; i < arriveTime.length; i++){
+          if(arriveTime[i] == arriveTime[i-3]){      
+            drop++;
+          }else if (i>19 && arriveTime[i] - arriveTime[i-20] < 10) {
+            drop++;
+          }else if(i>59 && arriveTime[i] - arriveTime[i-60] < 60){
+            drop++;
+          }else continue;
+        }
+        return drop;
+    } 
+
+    public static int gateway(int[] arriveTime){
+        int drop = 0; // re-assigned
+        int count10 = 0; // total passengers from time 1. at most 20 in 10 minutes.
+        int count60 = 0; // at least 60 in 60 minutes.
+
+        Map<Integer, Integer> map = new HashMap<>();
+        
+        for (int i : arriveTime){
+          map.put(i, map.getOrDefault(i,0)+1);
+        }
+
+        int last = arriveTime[arriveTime.length-1];
+        for (int i=1; i <= last; i++){ // loop from minute 1 to last minute.
+            int cur = (map.get(i)==null)? 0: map.get(i); // get how many people are at given minutes. curre
+            if (cur == 0) continue; // no one came in this minute;
+
+            if (i<=10){
+              count10 += cur;
+            }else{              
+              // at time 11, 11-10 = 1
+              // at time 21, 21-10 = 11, remove 11
+              // at time 100, 100-10=90, remove 90 
+              count10 -= map.get(i-10);
+              count10 += cur;
+            }
+            if (i<=60){
+              count60 += cur;
+            }else{
+              count60 -= map.get(i-60);
+              count60 += cur;
+            }
+
+            System.out.println("Time "+ i + ": cur: "+cur+" ,in 10: "+count10 + " ,in 60: "+ count60);
+            
+            if (count60 > 60) {
+              // count10-60 -> 7,7,7,7 drop last 3 of 7's, not drop all of them.
+              // cur = 4 for all other cases
+              drop += Math.min(count10-60, cur); // more than 60 people in 60 mins;
+              System.out.println("drop 60m: "+drop);
+            }else if (count10 > 20){
+              drop += Math.min(count10-20, cur);
+              System.out.println("drop 10m: "+drop);
+            }
+            else if (cur > 3) {
+              drop += (cur-3);
+              System.out.println("drop 1m: "+drop);
+            }            
+            else{
+              continue;
+            }
+        }
+        System.out.println(map);
+        return drop;
+    }  
+}
+
+// Two Sum with unique pairs // or use hashSet for O(n)/ O(n)
+// Time: O(nlogn) for sorting
+// Space: O(1) 
+import java.util.*;
+public class Main {
+    public static void main(String[] args) {
+        int[] nums = {1,1,2,45,46,46}; //output=2
+        int target= 47; // 1+46, 2+45
+        System.out.println(uniquePair(nums, target));
+    }
+    public static int uniquePair(int[] nums, int target){
+        if (nums == null || nums.length == 0) return 0;
+        // need to sort when use pointer.
+        Arrays.sort(nums);
+        int count = 0;
+        int left = 0;
+        int right = nums.length-1;
+        while(left < right){
+          // skip the duplicated number.
+          while(nums[left] == nums[left+1]) left++;
+          while(nums[right] == nums[right-1]) right--;
+          if (nums[left] + nums[right] == target){
+              count++;
+              left++;
+              right--;
+          } else if (nums[left] + nums[right] < target){
+            left++;
+          }else{
+            right--;
+          }
+        }
+        return count;
+    }  
+}
+
+// Unique Device Name // Time: O(n), Space: O(m<n), where m is the count of not unique device as one.
+import java.util.*;
+public class Main {
+    public static void main(String[] args) {       
+        String[] names = {"switch", "tv", "switch", "tv","switch", "tv", "tv"};
+        System.out.println(deviceName(names));
+    }
+    public static String deviceName(String[] names){
+        // can we modified inplace? in the given array? yes
+        // create a hashmap and track the count.
+        Map<String, Integer> map = new HashMap<>();
+
+        for (int i = 0; i< names.length; i++){
+          
+          map.put(names[i], map.getOrDefault(names[i], 0)+1);
+
+          int freq = map.get(names[i]);
+          if (freq > 1){
+            names[i] += Integer.toString(freq-1);
+          }
+        }
+        return Arrays.toString(names);
+    }  
+}
+
+
+// Labeling System
+// Time: O(nlogn) for sorting.
+// Space: O(n) for new array, actually we can sort des to have O(1) space.
+
+import java.text.CharacterIterator;
+import java.util.*;
+public class Main {
+    public static void main(String[] args) {
+        String s = "baccc"; // k=2, output: ccbca
+        String s1 = "abbbcccdddddeeeeffff"; // k=2, output: ffeffeededdcddccbbab
+        String s2 = "baccczzzzz"; // k=2, output: zzczzczcba
+        String s3 = "baccczzzzz"; // k=1, output: zczczczbza
+        System.out.println(label(s, 2));
+        System.out.println(label(s1, 3));
+        System.out.println(label(s2, 2));
+        System.out.println(label(s3, 1));
+    }
+    public static String label(String s, int k){
+      char [] arr = s.toCharArray();
+      Arrays.sort(arr);
+      // char[] d is in decreasing order
+      char[] d = new char[arr.length];
+      for (int i=0; i<arr.length; i++){
+        d[i] = arr[arr.length-1-i];
+      }
+      int replace = 0;
+      for (int i = k; i< d.length; i++){
+        // more than k, replece with next large char.
+        if(d[i] == d[i-k]){
+          replace = i+1;
+          while(d[replace] == d[i]){
+            replace++;
+          }
+          System.out.println(d[i]+":"+ d[replace]);
+          char temp = d[i];
+          d[i] = d[replace];
+          d[replace]= temp;
+          i = i+k; // less than k, no need to replace, just skip.
+        }
+      }
+      return String.valueOf(d);
     }
 }
