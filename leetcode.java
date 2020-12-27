@@ -4088,3 +4088,83 @@ public class Main {
       return String.valueOf(d);
     }
 }
+
+// Amazon OA2 - Winning Sequence
+// Time / Space: O(n)
+import java.util.*;
+public class Main {
+    public static void main(String[] args) {
+        // all positive
+        // int num=6; int low=3; int up=5; // output = [-1];
+        int num=5; int low=3; int up=10; // output = [9,10,9,8,7];
+        System.out.println(winningSeq(num, low, up));
+    }
+    public static List<Integer> winningSeq(int num, int low, int up){
+        List<Integer> ans = new ArrayList();
+        // n elements can constract an array of size at most 2n-1 for given conditin.
+        if(num<3 || (num > 2*(up-low+1)-1)) {
+          ans.add(-1);
+          return ans;
+        }     
+        int i = up;
+        ans.add(0,i-1); // [9]
+        // build the decreasing part.
+        while(ans.size() != num && i>=low){
+          ans.add(i);
+          i--;
+        }
+        // build the increasing part.
+        int j = up-2;
+        while(ans.size() != num && j>=low){
+          ans.add(0,j);
+          j--;
+        }
+        return ans;
+    }
+}
+
+// Amazon OA2 - Chemical Delivery System
+import java.util.*;
+public class Main {
+    public static void main(String[] args) {
+        // int orders = 4;length of ask 
+        int[] ask = {4,6,6,7}; // may not be sorted.
+        int type = 3; // [0,1,2]
+        // int marks = 9;  // length of markings.
+        int[][] marking = {{0,3},{0,5},{0,7},{1,6},{1,8},{1,9},{2,3},{2,5},{2,6}};
+        // output = 0 , choose the first flask.
+        System.out.println(flask(ask,type, marking));
+    }
+    public static int flask(int[] ask, int type, int[][] marking){
+        int flask = -1;
+        // key is flask number, value is total waste.
+        TreeMap<Integer, Integer> map = new TreeMap<>();
+        // Queue<Integer, Integer> map = new TreeMap<>(); also can use prioority queue.
+        int cur_flask = -1; // if cur flask has already calulated, the flag will indicated and we skip.
+        for (int i = 0; i<ask.length; i++){
+            for (int j = 0; j<marking.length; j++){
+              if(marking[j][0] != cur_flask && marking[j][1] >= ask[i]){
+                int waste = marking[j][1]-ask[i];
+                // System.out.println("ask: "+ask[i]+ ", marking: "+ marking[j][1]+ ", waste: "+ waste+", flask#: "+marking[j][0]);
+                map.put(marking[j][0], map.getOrDefault(marking[j][0], 0)+ waste);
+                cur_flask = marking[j][0];
+              } 
+              // (j%type==type-1) only if  # of flask == # of marking for one tpye. otherwise won't work.
+              // when the current flask doesn't fit the ask amount, remove the key form the map.
+              // invalid flask.
+              else if(marking[j][1] < ask[i] && (j==marking.length-1 || marking[j][0]!= marking[j+1][0])){
+                // System.out.println("cur_flask: "+cur_flask);
+                // System.out.println("marking[j+1][0]: "+marking[j][0]);
+                System.out.println("remove: "+marking[j][0]);
+                // map.remove(marking[j][0]);
+                // instead remove, we add big number to it, make sure it can never be choose.
+                map.put(marking[j][0], map.getOrDefault(marking[j][0], 0)+ 10000);
+              }
+              else continue;
+            }
+        }
+        System.out.println(map);
+        flask = map.firstKey();
+        return flask;
+    }
+}
