@@ -3540,7 +3540,7 @@ class Solution {
                     if (Character.getNumericValue(matrix[i][j]) == 0){
                         dp[i][j] = 0;
                     }else{
-                        dp[i][j] = 1+Math.min(dp[i-1][j-1],Math.min(dp[i-1][j],dp[i][j-1]));
+                        dp[i][j] = 1 + Math.min(dp[i-1][j-1],Math.min(dp[i-1][j],dp[i][j-1]));
                         
                     }
                 }
@@ -3832,18 +3832,18 @@ public class Main {
 // Time: O(M+N), M,N are the lengths of str1 and str2
 // Space: O(1), max depth of the stack is M+N
 class Solution {
-    public String gcdOfStrings(String str1, String str2) {
+    public String gcdOfStrings(String s, String t) {
         // str1 = "ABC", str2 = "ABCABC"
-        if (str1.length()<str2.length()) return gcdOfStrings(str2, str1);
+        if (s.length()<t.length()) return gcdOfStrings(t, s);
         
         // str1 = "LEET", str2 = "CODE"
-        if (!str1.substring(0, str2.length()).equals(str2)) return "";
+        if (!s.substring(0, t.length()).equals(t)) return "";
         
         // base case
-        if (str2.isEmpty()) return str1;
+        if (t.isEmpty()) return s;
         
-        // str1-str2
-        return gcdOfStrings(str1.substring(str2.length()), str2);
+        // s-t
+        return gcdOfStrings(s.substring(t.length()), t);
     }
 }
 
@@ -4166,5 +4166,173 @@ public class Main {
         System.out.println(map);
         flask = map.firstKey();
         return flask;
+    }
+}
+// 88. Merge Sorted Array
+// Time: O(m+n) / Space: O(1)
+class Solution {
+    public void merge(int[] nums1, int m, int[] nums2, int n) {
+        if (nums1 == null || m == 0) {
+            System.arraycopy(nums2,0,nums1,0,n);
+            return;
+        }
+        if (nums2 == null || n == 0) return;               
+        int p2 = n-1;
+        int p1 = m-1;
+        int p = m+n-1;
+        while(p1>=0 && p2>=0){
+            if (nums2[p2] > nums1[p1]){
+                nums1[p] = nums2[p2];
+                p--;
+                p2--;
+            }else{
+                nums1[p] = nums1[p1];
+                p--;
+                p1--;
+            }
+        }
+        System.out.println(p2);
+        System.out.println(p1);
+        System.out.println(p);
+        System.arraycopy(nums2,0,nums1,0,p2+1);
+        return;
+    }
+}
+
+// 674. Longest Continuous Increasing Subsequence
+// Time: O(n)/ Space:O(1)
+class Solution {
+    public int findLengthOfLCIS(int[] nums) {
+        int ans  = 0;
+        int start = 0;       
+        for(int i = 0; i<nums.length;++i){
+            if (i>0 && nums[i] <= nums[i-1]){
+                start=i;                 
+            }
+            ans = Math.max(ans, i-start+1);  
+        }
+        return ans;
+    }
+}
+
+// 239. Sliding Window Maximum
+
+class Solution { // dp O(n)
+  public int[] maxSlidingWindow(int[] nums, int k) {
+    int n = nums.length;
+    if (n * k == 0) return new int[0];
+    if (k == 1) return nums;
+
+    int [] left = new int[n];
+    left[0] = nums[0];
+    int [] right = new int[n];
+    right[n - 1] = nums[n - 1];
+    for (int i = 1; i < n; i++) {
+      // from left to right
+      if (i % k == 0) left[i] = nums[i];  // block_start
+      else left[i] = Math.max(left[i - 1], nums[i]);
+
+      // from right to left
+      int j = n - i - 1;
+      if ((j + 1) % k == 0) right[j] = nums[j];  // block_end
+      else right[j] = Math.max(right[j + 1], nums[j]);
+    }
+
+    int [] output = new int[n - k + 1];
+    for (int i = 0; i < n - k + 1; i++)
+      output[i] = Math.max(left[i + k - 1], right[i]);
+
+    return output;
+  }
+}
+
+
+class Solution { // TLE - Time: O(nk)
+    public int[] maxSlidingWindow(int[] nums, int k) {
+        int n = nums.length;
+        if(n*k==0) return new int[0];      
+        int[] ans = new int[n-k+1];
+        for(int i=0; i<n-k+1; i++){
+            int max = Integer.MIN_VALUE;
+            for (int j=i;j<i+k; j++){
+                max = Math.max(max,nums[j]);
+            }
+            ans[i] =max;
+        }
+        return ans;
+    }
+}
+
+// Amazon OA2 Divisibility of Strings
+import java.util.*;
+public class Main {
+    public static void main(String[] args) {
+       String s = "wqzpuogsqcxpqizenbrhcbijieufuxgqpfijuobkqacjkdnzggijhqurwqyrnejckrnghqsyswhczwdicltjdndaebrtgcysulydcsbupkzogewkqpwtfzvjameircaloaqstsoiepynuvxmmthrsdcvrhdijgvzgmtzeijkzixtfxhrqpllspijwnsitnjazdwqzpuogsqcxpqizenbrhcbijieufuxgqpfijuobkqacjkdnzggijhqurwqyrnejckrnghqsyswhczwdicltjdndaebrtgcysulydcsbupkzogewkqpwtfzvjameircaloaqstsoiepynuvxmmthrsdcvrhdijgvzgmtzeijkzixtfxhrqpllspijwnsitnjazdwqzpuogsqcxpqizenbrhcbijieufuxgqpfijuobkqacjkdnzggijhqurwqyrnejckrnghqsyswhczwdicltjdndaebrtgcysulydcsbupkzogewkqpwtfzvjameircaloaqstsoiepynuvxmmthrsdcvrhdijgvzgmtzeijkzixtfxhrqpllspijwnsitnjazdwqzpuogsqcxpqizenbrhcbijieufuxgqpfijuobkqacjkdnzggijhqurwqyrnejckrnghqsyswhczwdicltjdndaebrtgcysulydcsbupkzogewkqpwtfzvjameircaloaqstsoiepynuvxmmthrsdcvrhdijgvzgmtzeijkzixtfxhrqpllspijwnsitnjazd";
+
+        String t =  "wqzpuogsqcxpqizenbrhcbijieufuxgqpfijuobkqacjkdnzggijhqurwqyrnejckrnghqsyswhczwdicltjdndaebrtgcysulydcsbupkzogewkqpwtfzvjameircaloaqstsoiepynuvxmmthrsdcvrhdijgvzgmtzeijkzixtfxhrqpllspijwnsitnjazdwqzpuogsqcxpqizenbrhcbijieufuxgqpfijuobkqacjkdnzggijhqurwqyrnejckrnghqsyswhczwdicltjdndaebrtgcysulydcsbupkzogewkqpwtfzvjameircaloaqstsoiepynuvxmmthrsdcvrhdijgvzgmtzeijkzixtfxhrqpllspijwnsitnjazd";
+       
+        // System.out.println(solve("bcdbcdbcd","bacbcd")); // output = -1;
+        // System.out.println(solve("bcdbcdbcdbcd","bcdbcd")); // "bcd" output = 3;
+        System.out.println(solve(s,t));
+    }
+    // public static String scd(String s, String t){
+    //     if(s.length()<t.length()) return scd(t,s);
+    //     if(!s.substring(0, t.length()).equals(t)) return "";
+    //     if(t.isEmpty()) return s;
+    //     // System.out.println(">>"+s.substring(t.length()));
+    //     return scd(s.substring(t.length()), t);
+    //     // return s.substring(5);
+    // }
+
+    private static int solve(String s1,String s2){
+
+    if(s1.length()%s2.length()!=0) return -1;
+    int l2=s2.length();
+    for(int i=0;i<s1.length();i++){
+        if(s1.charAt(i)!=s2.charAt(i%l2))
+            return -1;
+    }
+    if(s2.length()%2==0){
+         if(!s2.substring(0,s2.length()/2).contentEquals(s2.substring(s2.length()/2, s2.length())))
+             return s2.length();
+    }
+    int divisible = 1;
+    for(int i=0;i<s2.length()/2;i++){
+        if(s2.length()%divisible++ != 0) {
+            continue;
+        }
+        int j=0;
+        for(;j<s2.length();j++){
+            if(s2.charAt(j)!=s2.charAt(j%(i+1)))
+                break;
+        }
+        if(j==s2.length())
+            return i+1;
+    }
+    return s2.length();
+    }
+}
+
+
+// 1328. Break a Palindrome
+// Time: O(n)/ Space:O(n)
+class Solution {
+    public String breakPalindrome(String palindrome) {
+        int len = palindrome.length();
+        if (len <= 1) return "";
+        
+        char[] p = palindrome.toCharArray();
+        
+        for(int i=0; i< len; i++){
+            int j = len-1-i; // find the mid point for odd length.
+            if(i==j) continue; // chenge mid char doesn't work.
+            if(p[i] != 'a'){
+                p[i] = 'a';
+                return String.valueOf(p);
+            }
+        }
+        // "aaaaa" all a case.
+        p[len-1]='b';
+        return String.valueOf(p);
     }
 }
