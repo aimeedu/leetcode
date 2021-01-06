@@ -3522,32 +3522,25 @@ class UndergroundSystem {
 // 221. Maximal Square/ Time, Space: O(m*n), as large as size of the matrix.
 class Solution {
     public int maximalSquare(char[][] matrix) {
-        // dp problem, record the square size at each index.
-        // the square is at most m*m or n*n, depend on min(n,m)
-         if (matrix == null || matrix.length == 0) return 0;
+        if (matrix ==null || matrix.length == 0) return 0;
+        int [][] dp = new int [matrix.length][matrix[0].length];
+        int ans = 0;
         
-        int row = matrix.length;
-        int col = matrix[0].length;
-        int res = 0;        
-        int dp[][] = new int[row][col];        
-        for (int i=0; i<row; i++){
-            for (int j=0; j<col; j++){
-                if (j == 0 || i==0){
-                    dp[i][j] = Character.getNumericValue(matrix[i][j]);
+        for (int i = 0; i<matrix.length; i++){
+            for (int j = 0; j<matrix[0].length;j++){
+                if (i==0 || j==0) {
+                    dp[i][j]= Character.getNumericValue(matrix[i][j]);
                 }
-
-                else{
-                    if (Character.getNumericValue(matrix[i][j]) == 0){
-                        dp[i][j] = 0;
-                    }else{
-                        dp[i][j] = 1 + Math.min(dp[i-1][j-1],Math.min(dp[i-1][j],dp[i][j-1]));
-                        
-                    }
+                else if (matrix[i][j] == '1'){
+                    dp[i][j]= 1 + Math.min(dp[i-1][j-1], Math.min(dp[i][j-1], dp[i-1][j]));
+                }else{
+                    dp[i][j] = 0;
                 }
-                res = Math.max(res, dp[i][j]);    
+                // need to update ans for all the cases.
+                ans = Math.max(ans, dp[i][j]);
             }
-        }       
-        return res* res;
+        }
+        return ans*ans;
     }
 }
 
@@ -4334,5 +4327,408 @@ class Solution {
         // "aaaaa" all a case.
         p[len-1]='b';
         return String.valueOf(p);
+    }
+}
+
+// 399. Evaluate Division
+class Solution {
+    public double[] calcEquation(List<List<String>> equations, double[] values, List<List<String>> queries) {
+        
+        double[] ans = new double[queries.size()];
+        // when there is no result, return -1.0.
+        Arrays.fill(ans, -1.0);
+        
+        // build a directed graph;
+        Map<String, Map<String, Double>> map = new HashMap<>();
+        
+        for (int i = 0; i < equations.size(); i++){
+            String x = equations.get(i).get(0);
+            String y = equations.get(i).get(1);
+            if (!map.containsKey(x)) map.put(x, new HashMap());
+            if (!map.containsKey(y)) map.put(y, new HashMap());
+            
+            // for the char itslfe.
+            map.get(x).put(x, 1.0);
+            map.get(y).put(y, 1.0);
+            
+            map.get(x).put(y, values[i]);
+            map.get(y).put(x, 1.0/values[i]);            
+        }
+        // System.out.println(map);
+        
+        // dfs search in the map/graph.
+        for (int i = 0; i<queries.size(); i++){
+            String x = queries.get(i).get(0);
+            String y = queries.get(i).get(1);
+            if(!map.containsKey(x) || !map.containsKey(y)){
+                continue; // default in array is -1.0.
+            }else{
+                // init: total = 1.0
+                double val = dfs(map, x, y, new HashSet<>()); //new HashSet<>() for each element in current map.
+                ans[i] = val;
+                // System.out.println("ans[i]: "+ans[i]);
+            }  
+        }
+        return ans;
+    }
+    
+    private double dfs(Map<String, Map<String, Double>> map, String x, String y, Set<String> visited){
+        // x is the starting point, y is the destination.
+        visited.add(x); // mark as seen to avoid the loop.
+        
+        // base case, not found
+        // if (map.get(x) == null || map.get(x).size() == 0) return -1.0;   
+        
+        // base case, found
+        if(map.get(x).containsKey(y)){
+            return map.get(x).get(y);
+        }
+        else{ // check each nodes in the key set.
+            for(String i : map.get(x).keySet()){
+                // System.out.println("from : " + x);
+                if (visited.contains(i)) {
+                    // System.out.println("skip i: " + i);
+                    continue; // skip the current iteration if already visited.
+                }
+                // System.out.println("to i: " + i);
+                double cur_val = map.get(x).get(i);
+                double total = dfs(map, i, y, visited);   
+                if (total == -1.0) continue; // reach the end of the function, continue explore the next element.
+                return cur_val * total;
+            }
+        }
+        return -1.0; // not found
+    } 
+}
+
+// 692. Top K Frequent Words
+// Time: O(nlogn) / Space: O(n)
+class Solution {
+    public List<String> topKFrequent(String[] words, int k) {
+
+        Map<String, Integer> map = new HashMap<>();
+        
+        for (int i=0; i<words.length;i++){
+            map.put(words[i], 1+map.getOrDefault(words[i], 0));
+        }
+        List<String> ans = new ArrayList<>(map.keySet());
+        
+        // sort by more than one conditions.
+        Collections.sort(ans, (a,b)->map.get(a).equals(map.get(b)) ? a.compareTo(b) : map.get(b)-map.get(a));
+    
+        return ans.subList(0,k);     
+    }
+}
+
+// 139. Word Break
+// Time: O(n^3) There are two nested loops, and substring computation at each iteration. 
+// Space: O(n)
+class Solution {
+    public boolean wordBreak(String s, List<String> wordDict) {
+        Set<String> set = new HashSet<>(wordDict);
+        // boolean array default to false;
+        boolean[] dp = new boolean[s.length() + 1];
+        dp[0] = true;  
+        for (int i=0; i<dp.length; i++){
+            for (int j=0; j<i; j++){
+                // dp[j], the prev word in dict
+                // and check the current word.
+                if (dp[j] && set.contains(s.substring(j, i))){
+                    dp[i]=true;
+                    // find one true is ok for current cell.
+                    break;
+                }
+            }
+        }
+        return dp[s.length()];
+    }
+}
+
+// 140. Word Break II
+class Solution {
+    public List<String> wordBreak(String s, List<String> wordDict) {
+        Set<String> set = new HashSet<>(wordDict);
+        
+        HashMap<Integer, List<String>> memo = new HashMap<>();
+
+        return dfs(s, set, 0, memo);
+    }
+    private List<String> dfs(String s, Set<String> set, int start, HashMap<Integer, List<String>> memo){
+        
+        if (memo.containsKey(start)){
+            return memo.get(start);
+        }
+        
+        List<String> res = new ArrayList<>();
+        
+        System.out.println("start: "+start);
+        
+        for(int end = start+1; end<s.length(); end++){
+            
+            String cur = s.substring(start, end);
+            
+            if (set.contains(cur)){
+                StringBuilder sb = new StringBuilder(cur);
+                
+                System.out.println("cur: "+cur);
+                
+                List<String> remains = dfs(s, set, end, memo);
+                
+                for(String r: remains){
+                    sb.append(" ");
+                    sb.append(r);
+                    res.add(sb.toString());
+                    // restore sb after add one result.
+                    sb = new StringBuilder(cur);
+                }     
+            }   
+        }
+        
+        String last = s.substring(start, s.length());
+        
+        if(set.contains(last)){
+            res.add(last);
+            // System.out.println("last: " + res);
+        }
+        System.out.println("res: " + res);
+        memo.put(start, res);
+        System.out.println(memo);
+        return res; 
+    }
+}
+
+
+
+class Solution { // my soln: TLE 
+    public List<String> wordBreak(String s, List<String> wordDict) {
+        Set<String> set = new HashSet<>(wordDict);
+        List<String> ans = new ArrayList<>();
+        System.out.println(s.length());
+        
+        dfs(s, set, ans, 0, 1, new ArrayList<>());
+        
+        return ans;
+    }
+    
+    private void dfs(String s, Set<String> set, List<String> ans, int start, int end, List<String> temp){
+
+        // System.out.println("start: "+start +  " , end: " + end);
+        if (end == s.length()+1 && start+1 == end) {      
+            ans.add(String.join(" ", temp));
+            // System.out.println(String.join(" ", temp));
+            // System.out.println("found one.");
+            return;
+        }
+        if(end == s.length()+1) {
+            // System.out.println("the end.");
+            return;
+        }
+        
+        String cur = s.substring(start, end);
+        
+        int prev = start;
+        
+        if (set.contains(cur)){
+            temp.add(cur);
+            start = end;
+
+            // System.out.println("cur: " + cur + ", temp: " + temp + ", start: " + start);
+            
+            dfs(s, set, ans, start, end+1, temp);
+            
+            // System.out.println("removed: "+temp.get(temp.size()-1));
+            temp.remove(temp.size()-1);
+            
+            dfs(s, set, ans, prev, end+1, temp);
+        }else{
+            dfs(s, set, ans, start, end+1, temp);
+        }  
+    }
+}
+
+// 445. Add Two Numbers II
+// Time/Space: O(l1+l2) 
+class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        ListNode cur = new ListNode();
+
+        Stack<Integer> s1 = new Stack<>();
+        Stack<Integer> s2 = new Stack<>();
+        
+        while(l1 != null){
+            s1.push(l1.val);
+            l1 = l1.next;
+        }
+        while(l2 != null){
+            s2.push(l2.val);
+            l2 = l2.next;
+        }
+        
+        int sum = 0;
+        int carry = 0;
+        
+        while(!s1.isEmpty() || !s2.isEmpty()){
+            if(!s1.isEmpty()){
+                sum += s1.pop();
+            }
+            if(!s2.isEmpty()){
+                sum += s2.pop();
+            }
+            sum += carry;
+            // for next iteration.
+            carry = sum/10; // 0 or 1
+            
+            // only take one digit to store in the linkedlist.
+            sum %= 10; // 0 - 9, if >10, take only last digit
+            cur.val = sum;            
+            
+            // prev node always default to carry. 
+            ListNode prev = new ListNode(carry);
+            prev.next = cur;
+            cur = prev;              
+            // restore for next iteration, or sum /= 10
+            sum = 0;   
+        }
+        System.out.println(cur.val);
+        return carry==1 ? cur : cur.next;
+    }
+}
+// 3. Longest Substring Without Repeating Characters
+// Time: O(n) -> len(s)
+// Space: O(26) constant
+class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        // return value is as long as 26.     
+        if (s.length() == 0 || s == null) return 0;
+        char[] a = s.toCharArray();      
+        Map<Character, Integer> map = new HashMap<>();
+        map.put(a[0], 0);
+        
+        int left = 0; // index at the start of new string.        
+        int max = 1;
+        
+        for(int i=1; i< a.length; i++){
+            if(map.containsKey(a[i])){
+                left = Math.max(map.get(a[i])+1, left);
+            }
+            max = Math.max(max, i-left+1);             
+            map.put(a[i], i); // update anyway or put new key
+        }       
+        return max;
+    }
+}
+
+class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        // return value is as long as 26.     
+        if (s.length() == 0 || s == null) return 0;
+        int[] dp = new int[s.length()+1];
+        dp[0] = 0;
+        dp[1] = 1;
+        char[] a = s.toCharArray();
+        
+        Map<Character, Integer> map = new HashMap<>();
+        map.put(a[0], 1);
+        
+        int prev_end = 0; // index at the end of prvious string.        
+        for(int i=1; i< a.length;i++){
+            if(map.containsKey(a[i])){
+                prev_end = Math.max(map.get(a[i]), prev_end);
+            }
+            map.put(a[i], i+1); // update anyway or put new key
+            dp[i+1] = Math.max(dp[i], i-prev_end+1);             
+        }       
+        return dp[s.length()];
+    }
+}
+
+// 1472. Design Browser History
+// 2 stacks
+class BrowserHistory {
+    private int cur, end; 
+    private String[] history;   
+    public BrowserHistory(String homepage) {
+        history = new String[5001];
+        cur = 0;
+        end = 0;
+        history[cur] = homepage;
+    } 
+    public void visit(String url) {
+        if (history[cur] != url){
+            cur++;
+            history[cur] = url;
+            end = cur;
+        }
+    } 
+    public String back(int steps) {
+        cur = Math.max(0, cur-steps);
+        return history[cur];
+    }    
+    public String forward(int steps) {
+        cur = Math.min(end, cur+steps);
+        return history[cur];
+    }
+}
+
+class BrowserHistory {
+    Stack<String> visit, backLog;
+    String homepage;
+    
+    public BrowserHistory(String homepage) {
+        this.visit = new Stack<>();
+        this.backLog = new Stack<>();
+        this.homepage = homepage;
+        this.visit.push(this.homepage);
+    }
+    
+    public void visit(String url) {
+        this.visit.push(url);
+        this.backLog.clear();
+    }
+    
+    public String back(int steps) {
+        while(this.visit.size()>1 && steps > 0){
+            String top = this.visit.pop();
+            this.backLog.push(top);
+            steps--; 
+        }
+        return this.visit.peek();
+    }
+    
+    public String forward(int steps) {
+        while(!this.backLog.isEmpty() && steps > 0){
+            String top_back = this.backLog.pop();
+            this.visit.push(top_back);
+            steps--;
+        }
+        return this.visit.peek();
+    }
+}
+
+// 1244. Design A Leaderboard
+// Space: O(n)
+class Leaderboard {
+    Map<Integer, Integer> map;
+    public Leaderboard() {
+        map = new HashMap<>();
+    }
+    public void addScore(int playerId, int score) { //O(1)
+        if(map.containsKey(playerId)){
+            map.put(playerId, map.get(playerId)+score);
+        }else{
+            map.put(playerId, score);
+        }     
+    }
+    public int top(int K) { // O(nlogn)
+        int sum = 0;
+        List<Integer> values = new ArrayList<>(this.map.values());
+        Collections.sort(values, Collections.reverseOrder());
+        for(int i = 0; i<K; i++){
+            sum += values.get(i);
+        }
+        return sum;
+    }
+    public void reset(int playerId) { // O(1)
+        map.put(playerId, 0);
     }
 }
