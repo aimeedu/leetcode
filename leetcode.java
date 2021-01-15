@@ -1923,16 +1923,9 @@ class Solution {
     }   
 }
 
-
-
-
-
-
-
-
-
-
 // 200. Number of Islands
+// Time : O(m* n)
+// space: O(m * n) recursion stack
 class Solution {
     public int numIslands(char[][] grid) {
         if(grid == null || grid.length == 0) return 0;
@@ -2849,6 +2842,28 @@ class Solution {
 // 56. Merge Intervals
 // Space: O(n) / Time: O(nlogn) for sorting
 class Solution {
+    public int[][] merge(int[][] intervals) {      
+        if (intervals.length <=1) return intervals;
+        // sort by start time.
+        Arrays.sort(intervals, (a,b)->a[0]-b[0]);    
+        List<int[]> res = new ArrayList<>();
+                
+        res.add(intervals[0]);       
+        for (int i = 1; i<intervals.length; i++){
+            // merge
+            if (intervals[i][0] <= res.get(res.size()-1)[1]){         
+                res.get(res.size()-1)[1] = Math.max(res.get(res.size()-1)[1], intervals[i][1]);       
+            // add new
+            }else{ 
+                res.add(intervals[i]);             
+            }
+        }
+        // List -> Array
+        return res.toArray(new int[res.size()][]);
+    }
+}
+
+class Solution {
     public int[][] merge(int[][] intervals) {
         
         List<int[]> ans = new ArrayList<>();
@@ -3147,22 +3162,7 @@ class Solution { // Time: O(n), Space: O(1)
 
 
 // 987. Vertical Order Traversal of a Binary Tree
-// Time : O(nlogn), Space: O(n)?
-/**
- * Definition for a binary tree node.
- * public class TreeNode {
- *     int val;
- *     TreeNode left;
- *     TreeNode right;
- *     TreeNode() {}
- *     TreeNode(int val) { this.val = val; }
- *     TreeNode(int val, TreeNode left, TreeNode right) {
- *         this.val = val;
- *         this.left = left;
- *         this.right = right;
- *     }
- * }
- */
+// assume n nodes. Time: O(n) / Space: O(n) skewed tree
 class Solution {
     public List<List<Integer>> verticalTraversal(TreeNode root) {
         
@@ -3243,34 +3243,56 @@ class Solution { // use extra space
     }
 }
 
-// 253. Meeting Rooms II   Time:O(nlogn)->sorting / Space: O(n)
+// 253. Meeting Rooms II   
+// Time:O(nlogn)->sorting / Space: O(n)
+// extract-min operation on a heap takes O(logN).
+// poll(), offer() all takes O(logn) time. height of the tree. bubble up, bubble done.
+class Solution { // use min heap
+    public int minMeetingRooms(int[][] intervals) {
+        if (intervals.length == 0 || intervals == null) return 0;
+        // sort by starting time.
+        Arrays.sort(intervals, (a,b)->a[0]-b[0]);
+        // min heap
+        PriorityQueue<Integer> q = new PriorityQueue<>();
+        // offer finish time.
+        q.offer(intervals[0][1]);
+        
+        for (int i=1; i<intervals.length; i++){          
+            // current starting time less than the earliest finish time
+            if(intervals[i][0] < q.peek()) q.offer(intervals[i][1]);
+            else{
+                q.poll();
+                q.offer(intervals[i][1]);
+            }
+        }
+        return q.size();
+    }
+}
+// Time:O(nlogn)->sorting / Space: O(n)
 class Solution {
     public int minMeetingRooms(int[][] intervals) {
         if (intervals == null || intervals.length == 0) return 0; 
-        // arrays for start time
-        int[] start = new int[intervals.length]; 
-        // arrays for end time
+        int[] start = new int[intervals.length];
         int[] end = new int[intervals.length];
-        int ans = 0;
         
-        for (int i = 0; i< intervals.length; i++){
+        for (int i=0; i<intervals.length; i++){
             start[i] = intervals[i][0];
             end[i] = intervals[i][1];
-        }
-        
+        }        
         Arrays.sort(start);
-        Arrays.sort(end);
+        Arrays.sort(end);       
         
-        int endPointer = 0;
-        for (int i=0; i<start.length; i++){
-            if (start[i] < end[endPointer]) {
-                ans++;
-            }
-            else {
-                endPointer++;
+        // point to the index that ends at the current earliest time.
+        int earliestFinish = 0;  
+        int count = 1; 
+        for (int i = 1; i<intervals.length; i++){
+            if (start[i] < end[earliestFinish]){
+                count++;
+            }else{
+                earliestFinish++;
             }
         }
-        return ans;
+        return count;
     }
 }
 
@@ -3333,6 +3355,8 @@ class Solution {
         // what if the last node is not n-1? not matter in this question.
         if (node == graph.length-1) {
             // add current path to the final answer, then backtrack.
+            // always make a new list and add to the final answer.
+            // the path refer to the pointer memory, if it changes, the final answer will change accordingly.
             ans.add(new ArrayList<>(path));
             return;
         }
@@ -4730,5 +4754,174 @@ class Leaderboard {
     }
     public void reset(int playerId) { // O(1)
         map.put(playerId, 0);
+    }
+}
+
+// 314. Binary Tree Vertical Order Traversal
+// assume n nodes. Time: O(n) / Space: O(n) skewed tree
+class Solution {
+    public List<List<Integer>> verticalOrder(TreeNode root) {
+        List<List<Integer>> ans = new ArrayList<>();
+        if (root == null) return ans;
+        TreeMap<Integer, ArrayList> map = new TreeMap<>();
+        Queue<Pair<TreeNode, Integer>> q = new LinkedList<>();
+
+        q.offer(new Pair(root, 0));
+        
+        while(!q.isEmpty()){
+            Pair<TreeNode, Integer> cur = q.poll();
+            TreeNode n = cur.getKey();
+            int col = cur.getValue();       
+            map.putIfAbsent(col, new ArrayList());
+            map.get(col).add(n.val);
+            
+            if (n.left != null) q.offer(new Pair(n.left, col-1));
+            if (n.right != null) q.offer(new Pair(n.right, col+1));
+        }
+        for(List<Integer> e: map.values()){
+            ans.add(e);
+        }       
+        return ans;
+    }
+}
+
+// 390. Elimination Game
+// Time : O(logn), binary search
+class Solution {
+    public int lastRemaining(int n) {
+        boolean left = true;
+        int remain = n;
+        int step = 1;
+        int head = 1;
+        while(remain>1){
+            if (left || remain%2 == 1){
+                head += step;
+            }
+            remain = remain / 2;
+            step *= 2;
+            left = !left;
+        }
+        return head;
+    }
+}
+class Solution {
+    public int lastRemaining(int n) {
+        if(n == 1) return 1;
+        if(n % 2 == 1) {
+            n--;
+        }
+        return leftright(n);
+    }
+    
+    private int leftright(int n) {
+        if(n == 1) return 1;
+        if(n <= 4) return 2;
+        return 2 * rightleft(n >> 1);
+    }
+    
+    private int rightleft(int n) {
+        if(n <= 2) return 1;
+        if(n % 2 == 0) {
+            return 2* leftright(n >> 1) - 1;
+        } else {
+            return 2 * leftright(n >> 1);
+        }
+    }
+} 
+
+// 380. Insert Delete GetRandom O(1)
+// Time: O(1)
+// Space: O(n)
+class RandomizedSet {
+    Map<Integer, Integer> map;
+    List<Integer> list;
+    Random rand = new Random();
+    /** Initialize your data structure here. */
+    public RandomizedSet() {
+        this.map = new HashMap<>();
+        this.list = new ArrayList<>();
+    }
+    
+    /** Inserts a value to the set. Returns true if the set did not already contain the specified element. */
+    public boolean insert(int val) {
+        if(map.containsKey(val)) return false;
+        
+        map.put(val, list.size());
+        list.add(list.size(), val);       
+        // System.out.println(map);
+        // System.out.println(list);
+        return true;
+    }
+    
+    /** Removes a value from the set. Returns true if the set contained the specified element. */
+    public boolean remove(int val) {
+        if(!map.containsKey(val)) return false;
+            // retrieve index.
+            int index = map.get(val);
+            // remove in ArrayList. 
+            // 1. swap with last element and delete last element.          
+            int lastVal = list.get(list.size()-1);  
+            list.set(index, lastVal);
+            list.remove(list.size()-1);     
+            // update the swapped element in the map.
+            map.put(lastVal, index);
+            // remove in map.
+            map.remove(val);     
+            // System.out.println("rm: "+map);
+            // System.out.println("rm: "+ list);
+            return true;  
+    } 
+    /** Get a random element from the set. */
+    public int getRandom() {
+        // if (list.size() == 1) return list.get(0);
+        // Random rand = new Random(); 
+        // int index = rand.nextInt(list.size()-1); 
+        // return list.get(index);
+        return list.get(rand.nextInt(list.size()));
+    }
+}
+
+// 394. Decode String
+class Solution {
+    public String decodeString(String s) {
+        if (s== null || s.length() ==0) return s;
+        Stack<Integer> s1 = new Stack<>();
+        Stack<String> s2 = new Stack<>();
+        
+        String res = "";
+        String num = "";
+        
+        for(int i = 0; i< s.length(); i++){
+            char cur = s.charAt(i);
+            if (s1.isEmpty() && Character.isLetter(cur)){
+                res += cur;
+            }else if(Character.isDigit(cur)){
+                num += cur;
+                if(!Character.isDigit(s.charAt(i+1))){
+                    s1.push(Integer.parseInt(num));
+                    num = ""; // reset
+                }
+            }else if(cur == '[' || Character.isLetter(cur)){
+                s2.push(Character.toString(cur));
+               
+            }else{ // cur == "]", ready to pop
+                String temp = "";
+                while (!s2.peek().equals("[")){      
+                    temp = s2.pop() +temp;
+                }
+                if(s2.peek().equals("[")){
+                    s2.pop();
+                    int n = s1.pop();
+                    String repeated = temp.repeat(n-1);
+                    temp = temp+repeated;
+                }
+                if(!s1.isEmpty()){
+                    s2.push(temp);
+                }else{
+                    res += temp;   
+                }               
+            }
+        }
+        return res;
     }
 }
