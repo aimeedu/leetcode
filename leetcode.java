@@ -3298,32 +3298,76 @@ class Solution {
 
 // 1209. Remove All Adjacent Duplicates in String II
 // Time: O(n) / Space: O(n) 
-class Solution {
+class Solution { // best
     public String removeDuplicates(String s, int k) {
-        Stack<Integer> counts = new Stack<>();      
-        Stack<Character> letters = new Stack<>();        
-        char[] arr = s.toCharArray();
-        for (char c : arr){
-            if (!letters.isEmpty() && letters.peek() == c){
-                counts.push(counts.pop()+1);
-                if(counts.peek() == k){
-                    counts.pop();
-                    letters.pop();
-                } 
+        StringBuilder sb = new StringBuilder(s);
+        int count[] = new int[sb.length()];
+        for (int i=0; i<sb.length(); i++){
+            if (i == 0 || sb.charAt(i) != sb.charAt(i-1)){
+                count[i] = 1;
+            }else{
+                count[i] = count[i-1]+1;
+                if(count[i] == k){
+                    sb.delete(i-k+1, i+1);
+                    i= i-k;
+                }
             }
-            else{
-                letters.push(c);
-                counts.push(1);
+        }
+        return sb.toString();
+    }
+}
+// 1D candy crash -> remove k or more.
+class Solution { // dp approch
+    public String removeDuplicates(String s, int k) {
+        StringBuilder sb = new StringBuilder(s);
+        
+        int [] dp = new int[sb.length()];
+        
+        for(int i = 0; i<sb.length(); i++){
+            
+            if(i == 0 || sb.charAt(i) != sb.charAt(i-1)){
+                dp[i] = 1;
+            }else{
+                dp[i] = dp[i-1]+1;
+                if(dp[i] >= k && (i==sb.length()-1 || sb.charAt(i) != sb.charAt(i+1))) {
+                    int count = dp[i];
+                    sb.delete(i-count+1, i+1);
+                    i = i-count;
+                }
             }
         }        
+        return sb.toString();
+    }
+}
+class Solution { // stack
+    public String removeDuplicates(String s, int k) {
+        // 9:13 start
+        Stack<Character> s1 = new Stack<>();
+        Stack<Integer> s2 = new Stack<>();
+        
+        s1.push(s.charAt(0));
+        s2.push(1);
+        for(int i = 1; i<s.length(); i++){
+            if (!s1.isEmpty() && s1.peek() == s.charAt(i)){
+                int count = s2.pop()+1;
+                if(count >= k && (i == s.length()-1 || s.charAt(i) != s.charAt(i+1))){
+                    s1.pop();
+                }else{
+                    s2.push(count);
+                }
+            }else{
+                s1.push(s.charAt(i));
+                s2.push(1);
+            }
+        }       
         StringBuilder sb = new StringBuilder();
-        while(!letters.isEmpty()){
-            char l = letters.pop();
-            int n = counts.pop();
-            for (int i= 0; i<n;i++){
-                sb.insert(0, l);
-            }   
-        }
+        while(!s1.isEmpty()){
+            char temp = s1.pop();
+            int count = s2.pop();
+            for(int i =0; i<count;i++){
+                sb.insert(0, temp);
+            }
+        }      
         return sb.toString();
     }
 }
@@ -3375,39 +3419,18 @@ class Solution {
 // Space: O(1)
 
 class Solution {
-    public int twoCitySchedCost(int[][] costs) {
-        int sum = 0;   
-        int mid = costs.length / 2;
-        
-        // sort by the difference of costA and costB.
-        Arrays.sort(costs, 
-                    (int[] p, int[] q) -> (p[0]-p[1] - (q[0]-q[1]))
-                   );
-        
-        for(int i=0; i<costs.length; i++){
-            if(i<mid) sum += costs[i][0];
-            else sum += costs[i][1];
-        }
-        return sum;
-    }
-}
-
-class Solution {
-    public int twoCitySchedCost(int[][] costs) {
-        int sum = 0;   
-        int mid = costs.length / 2;
-        
-        // sort by the difference of costA and costB.
-        Arrays.sort(costs, new Comparator<int[]>(){
-            public int compare(int[] p, int[] q){
-                return (p[0]-p[1]) - (q[0]-q[1]);
-            }
-        });
-        
-        for(int i=0; i<costs.length; i++){
-            if(i<mid) sum += costs[i][0];
-            else sum += costs[i][1];
-        }
+    public int twoCitySchedCost(int[][] costs) { 
+        Arrays.sort(costs, (a,b)-> a[0]-a[1] - (b[0]-b[1]));            
+        // costs.forEach(System.out::println);
+//         List<Integer> diff = Arrays.stream(costs)
+//             .map((cost) -> cost[0]-cost[1])
+//             .collect(Collectors.toList());            
+//         diff.forEach(System.out::println);      
+        int n = costs.length/2;
+        int sum = 0;
+        for(int i=0; i<n; i++){
+            sum += (costs[i][0]+costs[i+n][1]);      
+        } 
         return sum;
     }
 }
@@ -3441,7 +3464,69 @@ class Solution { // not efficient
 
 // 1396. Design Underground System -> system design problem
 // Time: O(1) for all 3 methods, 
-// Space: O(P+S^2), where SS is the number of stations on the network, and PP is the number of passengers making a journey concurrently during peak time.
+// Space: O(P+S^2), where S is the number of stations on the network, and P is the number of passengers making a journey concurrently during peak time.
+// P is the number of passengers making a journey concurrently during peak time.
+
+class UndergroundSystem {
+    // Space: O(m+n^2+c),
+    // c is number of concurrently checkin's during the peak time.
+    // where m is the number of check in we have, it grows as pasengers not leaving the station.
+    // n grows as the number of checkout grows. at worst (n choose 2) which is n^2.
+    // so we don't know which one is bigger. 
+    private Map<Integer, Checkin> checkinMap = new HashMap<>();
+    private Map<String, Trip> tripMap = new HashMap<>();
+    
+    public UndergroundSystem() {
+    }
+    
+    public void checkIn(int id, String stationName, int t) { // O(1)
+        checkinMap.put(id, new Checkin(stationName, t));
+    }
+    
+    public void checkOut(int id, String stationName, int t) { // O(1)
+        Checkin cur = checkinMap.get(id);
+        String startStation = cur.station;
+        int startTime = cur.time;
+        
+        // build trip key.
+        String trip = startStation+","+stationName;
+        // query the trip info.
+        tripMap.putIfAbsent(trip, new Trip());
+        tripMap.get(trip).addTrip(t-startTime);
+        
+        checkinMap.remove(id);
+    }
+    // Dividing two numbers is also an O(1) operation.
+    public double getAverageTime(String startStation, String endStation) {
+        String key = startStation + "," + endStation;        
+        return tripMap.get(key).getAverage();
+    }
+       
+    class Checkin { // holds the check in information.
+        public String station;
+        public int time;
+        
+        public Checkin(String station, int time){ 
+            this.station = station;
+            this.time = time;
+        }
+    }
+    
+    class Trip { // holds average time of completed trip.
+        public int count = 0;
+        public double total = 0.0;  
+        public void addTrip(int duration) {
+            count ++;
+            total += duration;
+        }   
+        public double getAverage(){
+            return total / count;
+        }      
+    }
+    
+}
+
+
 class UndergroundSystem {
     private Map<String, Pair<Double, Double>> tripMap = new HashMap<>();
     private Map<Integer, Pair<String, Integer>> checkinMap = new HashMap<>();
@@ -3473,7 +3558,7 @@ class UndergroundSystem {
         
         checkinMap.remove(id);        
     }
-    
+    // Dividing two numbers is also an O(1) operation.
     public double getAverageTime(String startStation, String endStation) {
         String routeKey = startStation + ","+ endStation;
         double avg = tripMap.get(routeKey).getKey() / tripMap.get(routeKey).getValue();
@@ -4571,6 +4656,93 @@ class Solution { // my soln: TLE
 }
 
 // 445. Add Two Numbers II
+// Stack : Time/ Space : O(l1+l2)
+class Solution {
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        Stack<Integer> s1 = new Stack<>();  
+        Stack<Integer> s2 = new Stack<>();
+        
+        while(l1 != null){
+            s1.push(l1.val);
+            l1 = l1.next;
+        }
+        while(l2 != null){
+            s2.push(l2.val);
+            l2 = l2.next;
+        }        
+        ListNode head = null;
+        int carry = 0;
+        while(!s1.isEmpty() || !s2.isEmpty()){            
+            int a = s1.isEmpty() ? 0 : s1.pop();
+            int b = s2.isEmpty() ? 0 : s2.pop();
+            int sum = a + b + carry;            
+            ListNode n = new ListNode(sum % 10);            
+            // add to front
+            n.next = head;
+            // move head pointer to n, the first place.
+            head = n;             
+            carry = sum/10;
+        }        
+        if(carry == 1){
+            ListNode lead = new ListNode(1);
+            lead.next = head;
+            head = lead;
+        }
+        return head;
+    }
+ }
+
+// Stack : Time : O(l1+l2) / Space : O(max(l1,l2))
+ class Solution { // fast
+    public ListNode reverseList(ListNode head) {
+        ListNode last = null;
+        while (head != null) {
+            // keep the next node
+            ListNode tmp = head.next;
+            // reverse the link
+            head.next = last;
+            // update the last node and the current node
+            last = head;
+            head = tmp;    
+        }    
+        return last;
+    }
+    
+    public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+        // reverse lists
+        l1 = reverseList(l1);
+        l2 = reverseList(l2);
+        
+        ListNode head = null;
+        int carry = 0;
+        while (l1 != null || l2 != null) {
+            // get the current values 
+            int x1 = l1 != null ? l1.val : 0;
+            int x2 = l2 != null ? l2.val : 0;
+            
+            // current sum and carry
+            int val = (carry + x1 + x2) % 10;
+            carry = (carry + x1 + x2) / 10;
+            
+            // update the result: add to front
+            ListNode curr = new ListNode(val);
+            curr.next = head;
+            head = curr;
+            
+            // move to the next elements in the lists
+            l1 = l1 != null ? l1.next : null;
+            l2 = l2 != null ? l2.next : null;
+        }
+
+        if (carry != 0) {
+            ListNode curr = new ListNode(carry);
+            curr.next = head;
+            head = curr;
+        }
+
+        return head;
+    }
+}
 // Time/Space: O(l1+l2) 
 class Solution {
     public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
@@ -4882,6 +5054,45 @@ class RandomizedSet {
 }
 
 // 394. Decode String
+// Time: Time Complexity: \mathcal{O}(\text{maxK} \cdot n)O(maxK⋅n), where \text{maxK}maxK is the maximum value of kk and nn is the length of a given string ss. We traverse a string of size nn and iterate kk times to decode each pattern of form \text{k[string]}k[string]. This gives us worst case time complexity as \mathcal{O}(\text{maxK} \cdot n)O(maxK⋅n).
+// Space: O(m+n), where m is the number of letters(a-z) and n is the number of digits(0-9) in string s. In worst case, the maximum size of \text{stringStack}stringStack and \text{countStack}countStack could be m and n respectively.
+
+
+class Solution {
+    public String decodeString(String s) {
+        // current string 
+        Stack<StringBuilder> s1 = new Stack<>();
+        // track count for string after "[".
+        Stack<Integer> s2 = new Stack<>();
+        
+        StringBuilder res = new StringBuilder();
+        
+        int k = 0;
+        
+        for (char c: s.toCharArray()){
+            if(Character.isDigit(c)){
+                k = 10*k + (c -'0'); // 48
+            }else if (c == '['){
+                s1.push(res);
+                res = new StringBuilder();
+                s2.push(k);
+                k = 0;
+            }else if(c == ']'){
+                int count = s2.pop();
+                StringBuilder prev = s1.pop();                
+                for (int i=0; i< count; i++){
+                    prev.append(res);
+                }
+                res=prev;
+            }else{ // c == letters
+                res.append(c);
+            }
+        }
+        return res.toString();
+    }
+}
+
+
 class Solution {
     public String decodeString(String s) {
         if (s== null || s.length() ==0) return s;
@@ -4922,6 +5133,832 @@ class Solution {
                 }               
             }
         }
+        return res;
+    }
+}
+
+// 92. Reverse Linked List II
+class Solution {
+    public ListNode reverseBetween(ListNode head, int m, int n) {
+        if(head == null) return head;
+        ListNode dummy = new ListNode(-1);
+        // connect dummy to head.
+        dummy.next = head;
+        ListNode prev = dummy;
+        
+        // move prev pointer to m-1 position.
+        for(int i=1; i<m; i++){
+            prev = prev.next;
+        }     
+        // find node cur at position m.
+        // in this question cur does not change, always at the node originally at m's position, even through the node is moving, the cur pointer always bonded to it.
+        // same for prev pointer, always at m-1's position, and that node is not moving at all.
+        ListNode cur = prev.next;
+        for(int i = m; i<n; i++){
+            // next node. prev -> cur -> nx
+            ListNode nx = cur.next;
+            
+            cur.next = nx.next;
+            nx.next = prev.next;
+            prev.next = nx;
+        }
+        return dummy.next;
+    }
+}
+
+// 206. Reverse Linked List
+// Time: O(n) / Space: O(1)
+class Solution { 
+    public ListNode reverseList(ListNode head) {
+        
+        if(head == null || head.next == null) return head;
+        ListNode prev = null;
+
+        while(head != null){
+            ListNode nx = head.next;
+            head.next = prev;
+            prev = head;
+            head = nx;
+        }
+        
+        return prev;
+    }
+}
+// recursive
+// Time: O(n) / Space: O(1)
+public ListNode reverseList(ListNode head) {
+    if (head == null || head.next == null) return head;
+    ListNode p = reverseList(head.next);
+    head.next.next = head;
+    head.next = null;
+    return p;
+}
+
+
+// 1347. Minimum Number of Steps to Make Two Strings Anagram
+// Time: O(n) / Space: O(1) max at 26
+class Solution {
+    public int minSteps(String s, String t) {
+        if(s.length() != t.length()) return -1;
+        int[] letters = new int[26];
+        for (int i =0; i<s.length(); i++){
+            letters[s.charAt(i)-'a']++;
+            letters[t.charAt(i)-'a']--;
+        }        
+        // sum up all positive integers or ABS(all negetive integers) in array.
+        int count = Arrays.stream(letters)
+            .filter(x -> x>0)
+            .sum();      
+        return count;
+    }
+}
+
+// 1188. Design Bounded Blocking Queue
+class BoundedBlockingQueue { 
+    
+    private int size;
+    private int capacity;
+    private LinkedList<Integer> queue;
+    private Object lock;
+
+    public BoundedBlockingQueue(int capacity) {
+        this.capacity = capacity;
+        this.lock = new Object();
+        this.queue = new LinkedList<Integer>();
+    }
+    
+    public void enqueue(int element) throws InterruptedException {
+        synchronized(lock) {
+            while (this.size == this.capacity) {
+                lock.wait();
+            }
+            queue.add(element);
+            this.size++;
+            lock.notify();
+        }
+        
+    }
+    
+    public int dequeue() throws InterruptedException {
+        synchronized(lock) {
+            while (this.size == 0) {
+                lock.wait();
+            }
+            int element = queue.pollFirst();
+            this.size--;
+            lock.notify();
+            return element;
+        }
+    }
+    
+    public int size() {
+        return this.size;
+    }
+}
+
+class BoundedBlockingQueue { // good memory usage.
+
+    private Deque<Integer> q;
+    private Semaphore producer;
+    private Semaphore consumer;
+    
+    private ReadWriteLock rwLock;
+    
+    public BoundedBlockingQueue(int capacity) {
+        // The actual queue backing this ADT.
+        q = new ArrayDeque<>(capacity);
+        
+        // Semaphores to represent the spaces in the queue.
+        producer = new Semaphore(capacity);
+        consumer = new Semaphore(0);
+        
+        // Granular lock for RW ops on the queue.
+        rwLock = new ReentrantReadWriteLock();
+    }
+    
+    public void enqueue(int element) throws InterruptedException {
+        // If there is space in the queue, then block it.
+        producer.acquire();
+        
+        // Add the element into the queue.
+        rwLock.writeLock().lock();
+        q.offer(element);
+        rwLock.writeLock().unlock();
+        
+        // Let a consumer know that an element made it into the queue.
+        consumer.release();
+    }
+    
+    public int dequeue() throws InterruptedException {
+        // If there is an element in the queue, then reserve it.
+        consumer.acquire();
+        
+        // Remove an element from the queue.
+        rwLock.writeLock().lock();
+        int result = q.poll();
+        rwLock.writeLock().unlock();
+        
+        // Let a producer know that an empty slot is available for an element.
+        producer.release();
+        
+        return result;
+    }
+    
+    public int size() {
+        rwLock.readLock().lock();
+        int len = q.size();
+        rwLock.readLock().unlock();
+        
+        return len;
+    }
+}
+
+// 1429. First Unique Number
+
+class FirstUnique {
+
+  private Queue<Integer> queue = new ArrayDeque<>();
+  private Map<Integer, Boolean> isUnique = new HashMap<>();
+
+  public FirstUnique(int[] nums) {
+    for (int num : nums) {
+      // Notice that we're calling the "add" method of FirstUnique; not of the queue. 
+      this.add(num);
+    }
+  }
+
+  public int showFirstUnique() {
+    // We need to start by "cleaning" the queue of any non-uniques at the start.
+    // Note that we know that if a value is in the queue, then it is also in
+    // isUnique, as the implementation of add() guarantees this.
+    while (!queue.isEmpty() && !isUnique.get(queue.peek())) {
+      queue.remove();
+    }
+    // Check if there is still a value left in the queue. There might be no uniques.
+    if (!queue.isEmpty()) {
+      return queue.peek(); // We don't want to actually *remove* the value.
+    }
+    return -1;
+  }
+
+  public void add(int value) {
+    // Case 1: We need to add the number to the queue and mark it as unique. 
+    if (!isUnique.containsKey(value)) {
+      isUnique.put(value, true);
+      queue.add(value);
+    // Case 2 and 3: We need to mark the number as no longer unique.
+    } else {
+      isUnique.put(value, false);
+    }
+  }
+}
+
+class FirstUnique {
+    // maintian the order
+    private Set<Integer> q = new LinkedHashSet<>();
+    private Map<Integer, Boolean> unique = new HashMap<>();
+    
+    public FirstUnique(int[] nums) { // O(K numbers)
+        Arrays.stream(nums)
+            .forEach(n -> this.add(n));  // this add is an in clase method.            
+    }
+    
+    public int showFirstUnique() { // O(1)
+        if(!q.isEmpty()){
+            return q.iterator().next();
+        }
+        return -1;
+    }
+    
+    public void add(int value) { // O(1)
+        // not yet seen
+        if (!unique.containsKey(value)){
+            unique.put(value, true);
+            q.add(value);
+        }else{ //already in the queue
+            unique.put(value, false);
+            q.remove(value);
+        }
+    }
+}
+
+
+// 333. Largest BST Subtree
+class Solution { // fast O(n)
+    class Node {
+        int size;
+        boolean isValid;
+        int min;
+        int max;
+
+        Node(){
+            size = 0;
+            isValid = true;
+            min = Integer.MAX_VALUE;
+            max = Integer.MIN_VALUE;
+        }
+    }
+    public int largestBSTSubtree(TreeNode root) {
+        Node ans = postOrder(root);
+        return ans.size;
+    }
+    
+    private Node postOrder(TreeNode root){
+        Node rNode = new Node();
+        if(root != null){
+            Node left = postOrder(root.left);
+            Node right = postOrder(root.right);
+            
+            if(left.isValid && right.isValid && root.val > left.max && root.val < right.min){
+                rNode.isValid = true;
+                rNode.size = left.size + right.size + 1;
+                rNode.min = (left.min == Integer.MAX_VALUE)?root.val:left.min;
+                rNode.max = (right.max == Integer.MIN_VALUE)?root.val:right.max;
+            } else {
+                rNode.isValid = false;
+                rNode.size = Math.max(left.size, right.size);
+            }
+        } 
+        // System.out.println(rNode.isValid+" | "+rNode.size+" | "+rNode.min+" | "+rNode.max);
+        return rNode;
+    }
+}
+
+// Time: O(n)/ Space: max depth of the tree, worst case can be O(n)
+class Solution {
+    public int largestBSTSubtree(TreeNode root) {
+        if(root == null) {
+            return 0;
+        }
+        
+        if(isBST(root, Integer.MAX_VALUE, Integer.MIN_VALUE)){
+            return sizeof(root);
+        }
+        
+        return Math.max(largestBSTSubtree(root.left), largestBSTSubtree(root.right));
+    }
+    
+    private int sizeof(TreeNode root){
+        if (root == null) return 0;
+        return 1 + sizeof(root.left) + sizeof(root.right);
+    }
+    
+    private boolean isBST(TreeNode root, int max, int min){
+        if(root == null) return true;
+        if(root.val >= max || root.val <= min) return false;
+        return isBST(root.left, root.val, min) && isBST(root.right, max, root.val);
+    }
+}
+
+
+// 117. Populating Next Right Pointers in Each Node II
+// Time/Space: O(n)
+class Solution {
+    public Node connect(Node root) {
+        if (root ==null) return root;
+        Queue<Node> q = new LinkedList<>();
+        q.offer(root);
+        
+        while(!q.isEmpty()){
+            int size = q.size();
+
+            for (int i=0; i<size; i++){                
+                Node cur = q.poll();
+                Node nx = q.peek();
+                if (i<size-1) {
+                    cur.next = nx;
+                }
+                if(cur.left != null){
+                    q.offer(cur.left);
+                }
+                if(cur.right != null){
+                    q.offer(cur.right);
+                }
+            }
+        }
+        return root;
+    }
+}
+
+// 723. Candy Crush
+class Solution {
+    public int[][] candyCrush(int[][] board) {
+        int r = board.length;
+        int c = board[0].length;
+        Boolean crush = false;
+        
+        // find if there is anything to crush. mark as -(candy).
+        // 1. horizontal
+        for(int i=0; i<r; i++){
+            for(int j=0; j+2<c; j++){
+                int target = Math.abs(board[i][j]);
+                if(target!=0 && target == Math.abs(board[i][j+1]) && target == Math.abs(board[i][j+2])){
+                    crush = true;
+                    board[i][j] = board[i][j+1] = board[i][j+2] = -target;
+                }
+            }
+        }
+        // 2. vertical
+        for(int i=0; i+2<r; i++){
+            for(int j=0; j<c; j++){
+                int target = Math.abs(board[i][j]);
+                if (target!=0 && target == Math.abs(board[i+1][j]) && target == Math.abs(board[i+2][j])){
+                    crush = true;
+                    board[i][j] = board[i+1][j] = board [i+2][j] = -target;
+                }
+            }
+        }
+        
+        // crush the candy and drop the rest candy to fill the space.
+        if (crush){
+            for(int j=0; j<c; j++){
+                int a = r-1; // spot can put candy
+                for(int i=r-1; i>=0; i--){
+                    if(board[i][j] > 0){
+                        board[a][j] = board[i][j];
+                        a--;
+                    }
+                }
+                while(a>=0){
+                    board[a][j] =0;
+                    a--;
+                }
+            }
+        }
+        return crush ? candyCrush(board) : board;
+    }
+}
+
+// 763. Partition Labels
+// array is more efficient than hashmap
+// Time: O(n)/ Space: O(1): as much as 26
+class Solution {
+    public List<Integer> partitionLabels(String S) {
+        List<Integer> res = new ArrayList<>();
+        int[] index = new int[26];        
+        for(int i =0; i<S.length(); i++){
+            index[S.charAt(i)-'a']=i;
+        }
+        int start = 0;
+        int end = 0;
+        for(int i= 0; i<S.length(); i++){
+            end = Math.max(end, index[S.charAt(i)-'a']);
+            if(i == end){
+                res.add(end+1-start);
+                start = end+1;
+            }
+        }
+        return res;
+    }
+}
+
+// 937. Reorder Data in Log Files
+// Time: O(nlogn), where n is number of logs in input.
+// Arrays.sort(), daul pivit quick sort for primitives.
+// Space: O(logn) -> recursive call on quick sort.
+class Solution { 
+    public String[] reorderLogFiles(String[] logs) {
+        // the key is to write a comparator.
+        Arrays.sort(logs, (l1, l2) -> {
+            // return the index of the 1st occurance.
+            int space1 = l1.indexOf(" ");
+            String id1 = l1.substring(0, space1);
+            String body1 = l1.substring(space1+1);
+            
+            int space2 = l2.indexOf(" ");
+            String id2 = l2.substring(0, space2);
+            String body2 = l2.substring(space2+1);
+            
+            Boolean isDigit1 = Character.isDigit(body1.charAt(0));
+            Boolean isDigit2 = Character.isDigit(body2.charAt(0));
+            
+            // case1: 2 letter logs.
+            if(!isDigit1 && !isDigit2){
+                int val = body1.compareTo(body2);
+                if(val == 0) return id1.compareTo(id2);
+                return val;
+            }
+            // case2: digit vs digit -> leave the original order, return 0.
+            // case3: digit vs letter -> letter go first, 1
+            // case4: letter vs digit -> -1
+            return isDigit1 ? (isDigit2 ? 0 : 1) : -1; 
+        });
+        return logs;     
+    }
+}
+
+// 973. K Closest Points to Origin
+
+class Solution { 
+    // Time: O(nlogn)? or O(nlogK)
+    // Space: O(n)
+    public int[][] kClosest(int[][] points, int K) {
+        int [][] res = new int [K][2];
+       
+        PriorityQueue<int[]> q = new PriorityQueue<>((a,b) -> (a[0]*a[0]+a[1]*a[1] - (b[0]*b[0]+b[1]*b[1])));
+   
+        for(int[] p : points){
+            q.offer(p);     
+        }
+        
+        int i = 0;
+        while(K!=0){
+            res[i]=q.poll();
+            i++;
+            K--;
+        }
+        return res;
+    }
+}
+
+class Solution {
+    public int[][] kClosest(int[][] points, int K) {
+        // Time: sorting O(nlogn)
+        // Space: at most O(n)
+        Arrays.sort(points, (a,b) -> (a[0]*a[0]+a[1]*a[1] - (b[0]*b[0]+b[1]*b[1])));
+        
+        int[][] subarray = IntStream.range(0, K)
+                        .mapToObj(i -> points[i])
+                        .toArray(int[][]::new);
+        // int[][] subarray = Arrays.copyOfRange(points, 0, K);
+        return subarray;
+    }
+}
+
+
+// 547. Number of Provinces
+// Time: O(n^2) / Space: O(n)
+class Solution {
+    public int findCircleNum(int[][] isConnected) {
+        if(isConnected == null || isConnected.length==0) return 0;
+        boolean[] visited = new boolean[isConnected.length];
+        int res = 0;
+        for (int i = 0; i<isConnected.length;i++){          
+            if(!visited[i]){
+                dfs(isConnected, visited, i);
+                res++;
+            }
+        }
+        return res;
+    }
+    private void dfs(int[][] isConnected, boolean[] visited, int i){
+        visited[i] = true;
+
+        for (int j = 0; j<isConnected[0].length; j++){
+            if(!visited[j] && isConnected[i][j] == 1){
+                dfs(isConnected, visited, j);
+            }
+        }
+    }
+}
+
+// 994. Rotting Oranges
+// Time: O(m*n) 
+// Space: O(m*n) stack on recusive call.
+class Solution{
+private int row, col;
+    public int orangesRotting(int[][] grid) {
+        row = grid.length;
+        col = grid[0].length;
+        for (int i = 0; i < row; i++) {
+            for (int j = 0; j < col; j++) {
+                if (grid[i][j] == 2) {
+                    // dist  = 0;
+                    // startingBadOrange = true;
+                    dfs(grid, i, j , 0, true);
+                }
+            }
+        }
+
+        int max = 0;
+        for (int[] row : grid) {
+            for (int c : ints) {
+                if (c == 1) {
+                    return -1;
+                }
+                max = Math.min(max, c);
+            }
+        }
+        return -max;
+    }
+    private void dfs(int[][] grid, int i, int j, int dist, boolean startingBadOrange) {
+        if (i >= row || i < 0 || j >= col || j < 0 || grid[i][j] == 0) return;
+
+        if(grid[i][j] < 0 && -grid[i][j] <= dist){
+            // at the point that the length of the new route is about to execced the previous min route, no need to continue.
+            return;
+        }
+        if (grid[i][j] == 2 && !startingBadOrange) {
+            // wheneverwe meet a bad orange that is not the starting one, return.
+            return;
+        }
+        grid[i][j] = -dist; // inplace mark the current distance.
+        dfs(grid, i + 1, j, dist + 1, false);
+        dfs(grid, i - 1, j, dist + 1, false);
+        dfs(grid, i, j - 1, dist + 1, false);
+        dfs(grid, i, j + 1, dist + 1, false);
+    }
+}
+
+// 819. Most Common Word
+class Solution {
+    public String mostCommonWord(String paragraph, String[] banned) {
+        String[] words = paragraph.replaceAll("[^a-zA-Z0-9]", " ").toLowerCase().split("\\s+");
+        
+        Set<String> set = new HashSet<String>(Arrays.asList(banned));
+        
+        Map<String, Integer> map = new HashMap<>();
+        
+        for(String s: words){
+            if (!set.contains(s)){ // filter out the banned word
+                map.put(s, map.getOrDefault(s, 0)+1);
+            } 
+        }
+
+        return Collections.max(map.entrySet(), Map.Entry.comparingByValue()).getKey();
+    }
+}
+
+// 682. Baseball Game
+// Time/ Space : O(n)
+
+class Solution { // array is fast than stack
+    public int calPoints(String[] ops) {
+        
+        int[] arr = new int[ops.length];
+        int sum = 0;
+        int p = -1;
+        
+        for (String s : ops) {
+            char c = s.charAt(0);
+            
+            if (c == '+') {
+            
+                int plus = arr[p-1]+arr[p];
+                p++;
+                arr[p] = plus;
+                sum+=plus;
+                
+            } else if (c == 'D') {
+               int db = arr[p] *2;
+                p++;
+                arr[p] = db;
+                sum+=db;
+            } else if (c == 'C') {
+               int minus = arr[p];
+                p--;
+            
+                sum -= minus;
+                
+            } else {
+                int val = Integer.parseInt(s);
+                p++;
+                arr[p] = val;
+                sum += val;
+            }
+        }
+        
+        // for(int i : arr){
+        //     System.out.println(i);
+        // }
+        
+        return sum;
+    }
+}
+class Solution {
+    public int calPoints(String[] ops) {
+        int res = 0;
+        Stack<Integer> stack = new Stack<>();       
+        for(String s : ops){
+            if (s.equals("C")){
+                stack.pop();
+            }
+            else if (s.equals("D")){
+                int val = stack.peek() * 2;
+                stack.push(val);
+            }
+            else if (s.equals("+")){
+                // a+b=c
+                int b = stack.pop();
+                int c = b + stack.peek();
+                stack.push(b);
+                stack.push(c);
+            }else{ // digit
+                stack.push(Integer.parseInt(s));
+            }
+        }
+        // don't have to pop from stack, just loop through it.
+        for(int i : stack) res+=i;
+        return res;
+    }
+}
+
+// 138. Copy List with Random Pointer
+class Solution { // Time: O(n) / Space: O(1)
+    public Node copyRandomList(Node head) {
+        if (head == null) return null;
+        Node cur = head;
+
+        // pass 1: create copy and insert it into the given list.        
+        while(cur != null){
+            Node copy = new Node(cur.val);
+            copy.next = cur.next;
+            cur.next = copy;
+            cur = copy.next;
+        }
+        
+        // pass 2: wire random for the copys.
+        cur = head;
+        while(cur != null){
+            // get cur node's random, if it's not null, then it's next is the copy's random.
+            cur.next.random = (cur.random == null) ? null : cur.random.next;        
+            cur = cur.next.next;// skip 2 places.
+        }
+        
+        // pass 3: reconnect the node. 1 list -> 2 list.
+        cur = head;
+        Node res = head.next;
+        while(cur != null){
+            Node cp = cur.next;
+            Node nx = cur.next.next; // the next node of original list.
+            if(nx == null){
+                cur.next = null;
+                cp.next = null;
+                return res;
+            }
+            Node nx2 = nx.next; // the next node of new list.
+            cur.next = nx;
+            cp.next = nx2;
+            cur = cur.next;
+        }  
+        return res;
+    }
+}
+
+class Solution { // Time/Space: O(n)
+    public Node copyRandomList(Node head) {
+        if (head == null) return null;
+        Node cur = head;
+        Map<Node, Node> map = new HashMap<>();
+        // pass1: create map and copy nodes.
+        while(cur != null){
+            Node copy = new Node(cur.val);
+            map.put(cur, copy);
+            cur = cur.next;
+        }        
+        // pass2: wire 
+        cur = head; // restore cur pointer to head.
+        // map.get(cur);
+        Node newHead = null;
+        while(cur != null){            
+            Node cp = map.get(cur); // get copy node
+            if(newHead == null) newHead = cp; // set a head.
+            Node nx = map.get(cur.next); // get copyed next node.
+            Node rd = map.get(cur.random);
+            cp.next = nx;
+            cp.random = rd;
+            cur = cur.next;
+        }
+        return newHead;
+    }
+}
+
+
+// 863. All Nodes Distance K in Binary Tree
+/**
+ * Definition for a binary tree node.
+ * public class TreeNode {
+ *     int val;
+ *     TreeNode left;
+ *     TreeNode right;
+ *     TreeNode(int x) { val = x; }
+ * }
+ */
+ 
+class Solution {  // Space : O(n) / Time: O(n) BFS m(edge)+n(node) -> m = n-1 
+    public List<Integer> distanceK(TreeNode root, TreeNode target, int K) {
+        List<Integer> res = new ArrayList<>();
+     
+        // map child -> parent
+        Map<TreeNode, TreeNode> map = new HashMap<>();
+        // only root's parent can be negetive.
+        dfs(root, new TreeNode(-1), map);
+        
+        // for(Map.Entry<TreeNode, TreeNode> m : map.entrySet()){
+        //     System.out.println(m.getKey().val + "=" + m.getValue().val );
+        // }
+        int level = 0;
+        Queue<TreeNode> q = new LinkedList<>();
+        Set<TreeNode> set = new HashSet<>();
+        q.add(target);
+        
+        while(!q.isEmpty()){
+            if(level == K){
+                while(!q.isEmpty()){
+                    res.add(q.poll().val);
+                }
+                break;
+            }
+            int size = q.size();
+            for(int i = 0; i<size;i++){
+                TreeNode cur = q.poll();
+                set.add(cur);
+
+                if (cur.left != null && !set.contains(cur.left)) q.offer(cur.left);
+                if (cur.right != null && !set.contains(cur.right)) q.offer(cur.right);
+                TreeNode parent = map.get(cur);
+                if (parent.val != -1 && !set.contains(parent)) q.offer(parent);
+            }
+            level++;
+        }        
+        return res;
+    }
+    
+    private void dfs(TreeNode root, TreeNode parent, Map<TreeNode, TreeNode> map){
+        if(root == null) return;          
+        map.put(root, parent);    
+        if(root.left != null) dfs(root.left, root, map);
+        if(root.right != null) dfs(root.right, root, map);
+    }
+}
+
+// 735. Asteroid Collision / Time/ Space: O(n)
+class Solution {
+    public int[] asteroidCollision(int[] asteroids) {
+        Stack<Integer> stack = new Stack<>();       
+        for(int cur : asteroids){
+            // push to stack directly if empty stack/ same sign/ <-, ->, turning away
+            // [] / [-1,-2] / [1, 2] / [<- (-2, 2) ->]
+            if(stack.isEmpty() || cur*stack.peek()>0 || (stack.peek()<0 && cur>0)){
+                stack.push(cur);
+            }else{ // in the case of collision
+                Boolean pushCur = true;
+                // [2, -2] / [5, -10] / [5, -1]
+                while(!stack.isEmpty() && stack.peek()*cur < 0){
+                    if (stack.peek() == -cur) {
+                        stack.pop();
+                        pushCur = false; // [2, -2] canceled out, don't push current val.
+                        break; // no more to cancel. go out of the while loop.
+                    }else if (stack.peek() < -cur){ // [5, -10]
+                        stack.pop(); // continue to check on the stack.
+                        // [-20,1,2,3,4,5,-10]
+                    }else{
+                        pushCur = false;
+                        break; // no more to cancel.
+                    }
+                }
+                if (pushCur) stack.push(cur);
+            } 
+        }  
+        int [] res = new int[stack.size()];
+        if(stack.isEmpty()) return res;
+        // for(int i=0; i<stack.size(); i++){
+        //     res[i] = stack.get(i);
+        // }
+        int i = res.length-1;
+        while(!stack.isEmpty()){
+            res[i--] = stack.pop();
+        }       
         return res;
     }
 }
