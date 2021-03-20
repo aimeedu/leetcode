@@ -1,1 +1,1 @@
-## One leetcode a day, keep unemployment away.
+## One leetcode a day, keeps unemployment away.
